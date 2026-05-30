@@ -9,7 +9,7 @@
 - **Name:** `labas` — AI-powered multi-language test practice platform.
 - **Repo type:** Turborepo monorepo (Bun workspaces).
 - **Workspace packages:** `apps/*`, `packages/*`.
-- **Runtime & package manager:** **Bun** (`packageManager: "bun@1.3.11"`).
+- **Runtime & package manager:** **Bun** (`packageManager: "bun@1.3.14"`).
   - Do **NOT** use `pnpm`, `npm`, or `yarn` unless explicitly required by a global tool.
 
 ---
@@ -22,7 +22,7 @@
 | Backend | Hono + tRPC | Entry: `apps/server/src/index.ts`. Port 3000. |
 | DB Engine | PostgreSQL | Managed via Drizzle. |
 | DB ORM | Drizzle ORM | **Not Prisma.** |
-| Auth | Better-Auth | Email/password + OAuth. |
+| Auth | Better-Auth | Email/password. |
 | UI | shadcn/ui (shared) | Lives in `packages/ui`. Imported as `@labas/ui/components/*`. |
 | AI | OpenAI-compatible API | User-managed API keys via Settings UI. |
 | Build | Turborepo + `tsdown` | Server compiled with `tsdown`. |
@@ -89,7 +89,7 @@ bun run build            # Build all packages
 ## 5. Common Pitfalls — DO NOT
 
 - ❌ **Do not use `pnpm` / `npm` / `yarn`** for package management or running scripts.
-- ❌ **Do not assume Docker or Docker Compose** exists in this repo. There are no Dockerfiles or compose files.
+- ❌ **Do not assume Docker or Docker Compose** exists in this repo. Docker Compose is available in `packages/db/` for local development only.
 - ❌ **Do not assume Next.js**. This project uses **Vite + TanStack Router**, not Next.js App Router or Pages Router.
 - ❌ **Do not assume Prisma**. Database layer is **Drizzle ORM**.
 - ❌ **Do not hardcode API keys** in source code. AI keys are user-managed via the Settings UI.
@@ -246,10 +246,12 @@ export const Route = createFileRoute("/my-route")({
 ## 7. Environment & Secrets
 
 - Server environment variables are loaded from **`apps/server/.env`**.
-- Required variables typically include:
+- See `apps/server/.env.example` for the full server env list and `apps/web/.env.example` for web env.
+- Key variables include:
   - `DATABASE_URL` (PostgreSQL connection string)
   - `BETTER_AUTH_SECRET`
   - `BETTER_AUTH_URL`
+  - `CLOUDFLARE_TURNSTILE_SECRET_KEY` / `VITE_CLOUDFLARE_TURNSTILE_SITE_KEY` (optional, bot protection)
 - AI provider API keys are **NOT** stored in `.env`. Users configure their own keys via the Settings page in the UI.
 
 ---
@@ -376,7 +378,7 @@ export const Route = createFileRoute("/my-route")({
 ### Known Limitations
 - **Rate limiter** (`checkRateLimit` di `attempt.ts`) pakai in-memory `Map`. Gunakan user ID berbeda per test atau `Bun.sleep()` untuk menghindari rate limit blocker.
 - **Timer validation** (`finish`) butuh ≥5 detik elapsed sejak `start` — pakai `Bun.sleep()` + `{ timeout: 30000 }` pada `it()`.
-- **Env vars Wajib** untuk di-mock saat integration test: `DATABASE_URL`, `BETTER_AUTH_SECRET` (≥32 chars), `BETTER_AUTH_URL`, `CORS_ORIGIN`, `API_KEY_ENCRYPTION_KEY` (≥32 chars), `REDIS_URL`, `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`.
+- **Env vars Wajib** untuk di-mock saat integration test: `DATABASE_URL`, `BETTER_AUTH_SECRET` (≥32 chars), `BETTER_AUTH_URL`, `CORS_ORIGIN`, `API_KEY_ENCRYPTION_KEY` (≥32 chars), `REDIS_URL`, `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `CLOUDFLARE_TURNSTILE_SECRET_KEY`.
 
 ### TDD Convention
 - TDD: tulis test dulu, lihat fail, baru implementasi.

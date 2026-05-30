@@ -317,7 +317,7 @@ What makes Clay truly distinctive is its hover micro-animations: buttons on hove
 ### 4.2 Lazy Loading Architecture
 
 Heavy route components extracted to `apps/web/src/components/routes/*Page.tsx` and loaded via `.lazy.tsx`:
-- `BankPage`, `GeneratePage`, `LandingPage`, `PackagesPage`, `SettingsPage`
+- `BankPage`, `GeneratePage`, `PackagesPage`, `SettingsPage`
 - Libraries `recharts` and `react-joyride` wrapped in lazy bundles (`ChartsBundle.tsx`, `TourGuideImpl.tsx`)
 - Each chunk loaded on-demand via React.lazy + Suspense
 
@@ -334,7 +334,7 @@ All `packages/ui` primitives use semantic tokens; zero app-specific CSS vars in 
 | Pattern | Implementation | Files |
 |---------|---------------|-------|
 | Focus trap + escape | shadcn `<Dialog>` (adapter: Base UI) | 6 modals in `components/` |
-| Keyboard tabs | `handleRovingKeyDown` helper + ARIA | `FilterBar.tsx`, `GeneratePage.tsx`, `FloatingNav.tsx` |
+| Keyboard tabs | `handleRovingKeyDown` helper + ARIA | `FilterBar.tsx`, `GeneratePage.tsx` |
 | shadcn Tabs | `<Tabs>` primitive for simple tab groups | `PackagesPage.tsx`, `admin.featured.tsx` |
 | Skip link | `<SkipLink>` component, `#main-content` | `__root.tsx` |
 | Icon buttons | `aria-label` required, `title` insufficient | 16 buttons across 6 files |

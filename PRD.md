@@ -17,6 +17,8 @@ Pelajar Indonesia yang mempersiapkan ujian bahasa (IELTS, TOEFL, JLPT, HSK, Goet
 4. **Package Combiner** — gabung section dari berbagai paket tanpa perlu generate ulang
 5. **Exam Interface** — antarmuka ujian side-by-side (teks + soal), timer, auto-grade
 6. **Deep Analytics** — evaluasi per-section, identifikasi kelemahan, rekomendasi paket soal untuk perbaikan
+7. **Listening Comprehension** — audio player dengan TTS generation (Kokoro), format listening_multiple_choice, satu kali putar per soal
+8. **Anti-cheat Lite** — deteksi tab-switch, inactivity auto-submit, copy-paste dan right-click blocking selama ujian
 
 Target pengguna: pelajar Indonesia yang mempersiapkan IELTS, TOEFL, JLPT, HSK, dan ujian bahasa Jerman.
 
@@ -73,6 +75,16 @@ Target pengguna: pelajar Indonesia yang mempersiapkan IELTS, TOEFL, JLPT, HSK, d
 36. Sebagai kreator, saya ingin melihat berapa kali paket soal saya digunakan orang lain
 37. Sebagai pelajar, saya ingin membagikan link paket soal ke teman
 
+### Listening Comprehension
+38. Sebagai pelajar, saya ingin mendengarkan audio soal listening dan menjawab pertanyaan, agar saya bisa latihan listening comprehension
+
+### Authentication
+39. Sebagai pengguna, saya ingin login dengan akun Google atau GitHub tanpa harus membuat akun baru dengan email/password
+
+### Exam Integrity
+40. Sebagai penguji, saya ingin sistem mendeteksi tab-switch dan inactivity selama ujian, agar integritas tes lebih terjaga
+41. Sebagai pelajar, saya ingin mendapat peringatan jika saya berpindah tab atau terlalu lama tidak menjawab, agar saya tetap fokus selama ujian
+
 ## Exam Types Supported
 
 | Exam | Language | Levels | Focus Areas |
@@ -81,7 +93,10 @@ Target pengguna: pelajar Indonesia yang mempersiapkan IELTS, TOEFL, JLPT, HSK, d
 | TOEFL iBT | English | 0-120 | Academic English, university context |
 | JLPT | Japanese | N5-N1 | Kanji reading, grammar particles, text comprehension |
 | HSK | Chinese | HSK 1-6 | Character recognition, word choice, sentence structure |
-| Goethe / TestDaF | German | A1-C2 | Article/case, vocabulary in context, Lückentext |
+| Goethe-Zertifikat | German | A1-C2 | Article/case, vocabulary in context, Lückentext |
+| TOPIK | Korean | TOPIK I-II | Particles, honorifics, speech levels |
+| TOAFL | Arabic | — | RTL text support |
+| DELE | Spanish | A1-C2 | Verb conjugation focus |
 
 ## Question Formats
 
@@ -102,6 +117,7 @@ Target pengguna: pelajar Indonesia yang mempersiapkan IELTS, TOEFL, JLPT, HSK, d
 | Kanji Reading | | | ✓ | | | ✓ |
 | Particle Choice | | | ✓ | | | ✓ |
 | Article / Case Choice | | | | | ✓ | ✓ |
+| Listening Multiple Choice | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 
 ## Implementation Decisions
 
@@ -119,33 +135,57 @@ Target pengguna: pelajar Indonesia yang mempersiapkan IELTS, TOEFL, JLPT, HSK, d
 ```
 apps/web/            React SPA frontend
   routes/            File-based routes (TanStack Router)
-    index.tsx        Landing / Home
-    generate.tsx     AI Generator wizard
+    index.tsx        Entry → redirects to dashboard or landing
+    dashboard.tsx    Authenticated home
+    landing.tsx      Legacy redirect → /
+    login.tsx        Login
+    forgot-password.tsx  Password reset
+    verify-email.tsx Email verification
+    setup-avatar.tsx Avatar setup
+    $.tsx            Catch-all 404
     bank.tsx         Question Bank browse
-    bank/$id.tsx     Package / Question detail
-    builder.tsx      Test Builder (craft package)
-    builder/combo.tsx Package Combiner
-    exam/$id.tsx     Exam Interface
-    exam/$id/result.tsx  Exam Results
-    analytics.tsx    Deep Analytics dashboard
+    packages.tsx     Package listing
+    package.$id.tsx  Package detail
+    package.$id.take.tsx         Exam interface
+    package.$id.attempt.$attemptId.tsx  Attempt review
+    generate.tsx     AI Generator wizard
+    analytics.tsx    Analytics dashboard
+    leaderboard.tsx  Leaderboard
+    history.tsx      Attempt history
     settings.tsx     Settings (API keys, profile)
+    me.tsx           My profile
+    profile.$userId.tsx  User public profile
+    admin.tsx        Admin layout
+    admin.index.tsx  Dashboard stats
+    admin.users.tsx  User management
+    admin.credits.tsx Credit management
+    admin.jobs.tsx   Job management
+    admin.moderation.tsx Question moderation
+    admin.featured.tsx Featured content
+    jobs.tsx         My generation jobs
 
 apps/server/         Hono backend
   Mounts Better Auth + tRPC
 
 packages/
-  ai/                AI generation pipeline (new)
+  ai/                AI generation pipeline
   api/               tRPC routers + context
     routers/
       ai.ts          generateQuestions (streaming)
       question.ts    CRUD questions, search, filter
       package.ts     CRUD packages, sections
       combo.ts       Combo package creation
-      exam.ts        Attempts, grading, results
-      analytics.ts   Stats, trends, recommendations
+      attempt.ts     Attempts, grading, results
+      stats.ts       Stats, trends, recommendations
+      leaderboard.ts Leaderboard
+      verification.ts Email verification & password reset
       settings.ts    API key management
+      profile.ts     Profile management
+      rating.ts      Question/package ratings
+      feedback.ts    Question feedback
+      admin.ts       Admin procedures
   auth/              Better Auth config
-  db/                Drizzle ORM schema
+  db/                Drizzle ORM schema (22 tables)
   ui/                shadcn/ui shared components
   env/               Environment validation
 ```
@@ -161,26 +201,35 @@ packages/
 - **`packages/api/src/routers/`** — tRPC routers
   - Each router encapsulates one domain with clear procedures
 
-### Database Schema (New Tables)
+### Database Schema (22 tables in `packages/db/src/schema/`)
 
 ```
 exam_type          id, name, language, description
 section_type       id, name
 question           id, exam_type_id, section_type_id, format, passage_text,
                    question_text, options_json, correct_answer, explanation,
-                   difficulty (1-5), skill_tags[], source (ai|manual),
-                   ai_model, creator_user_id, is_public, usage_count, avg_rating
-package            id, title, description, exam_type_id, creator_user_id,
+                   difficulty (1-5), skill_tags[], is_case_sensitive,
+                   source (ai|manual), ai_model, creator_user_id,
+                   is_public, is_featured, usage_count, avg_rating
+testPackage        id, title, description, exam_type_id, creator_user_id,
                    is_public, total_questions, usage_count, avg_rating
-package_section    id, package_id, section_type_id, title, order_index
-section_question   id, section_id, question_id, order_index
-combo_package      id, title, description, creator_user_id, is_public
-combo_section      id, combo_id, source_package_id, source_section_id, order_index
-test_attempt       id, user_id, package_id_or_combo_id, started_at, finished_at, total_score
-section_result     id, attempt_id, section_type, score, max_score, time_spent_sec
+packageSection     id, package_id, section_type_id, title, order_index
+sectionQuestion    id, section_id, question_id, order_index
+comboPackage       id, title, description, creator_user_id, is_public
+comboSection       id, combo_id, source_package_id, source_section_id, order_index
+testAttempt        id, user_id, package_id_or_combo_id, started_at, finished_at, total_score, is_abandoned
+sectionResult      id, attempt_id, section_type, score, max_score, time_spent_sec
 answer             id, section_result_id, question_id, user_answer, is_correct, time_spent_sec
-user_api_key       id, user_id, provider, base_url, api_key_encrypted, model_name, is_active
-question_rating    id, user_id, question_id, score (1-5), created_at
+questionRating     id, user_id, question_id, score (1-5), created_at
+packageRating      id, user_id, package_id, score (1-5), created_at
+questionFeedback   id, user_id, question_id, feedback_text, created_at
+userCredit         id, user_id, token_balance, total_earned, total_spent
+creditTransaction  id, user_id, amount, reason, reference_id, created_at
+generationJob      id, user_id, status, progress, exam_type_id, created_at
+adminAuditLog      id, admin_user_id, action, target_user_id, details, created_at
+platformConfig     id, key, value
+
+— Auth tables (managed by Better Auth): user, session, account, verification
 ```
 
 ### Agentic AI Pipeline
@@ -206,7 +255,7 @@ Step 5: Quality Scorer      → Overall score, needsHumanReview flag
 
 ## Implementation Phases
 
-### Phase 1 — Foundation (Schema + Core Infrastructure)
+### ✅ Phase 1 — Foundation (Schema + Core Infrastructure) — DONE
 **Goal:** Database siap, user bisa manage API key, AI pipeline dasar berjalan
 
 | # | Task | Package |
@@ -221,7 +270,7 @@ Step 5: Quality Scorer      → Overall score, needsHumanReview flag
 
 **User stories delivered:** 1, 2, 3, 4, 7, 31, 32, 33
 
-### Phase 2 — Question Bank & Packages
+### ✅ Phase 2 — Question Bank & Packages — DONE
 **Goal:** Soal bisa disimpan, dipublikasikan, di-browse, dan dibundle
 
 | # | Task | Package |
@@ -236,7 +285,7 @@ Step 5: Quality Scorer      → Overall score, needsHumanReview flag
 
 **User stories delivered:** 5, 8, 9, 10, 11, 12, 13, 14, 15, 17
 
-### Phase 3 — Package Combiner + Agentic Mode
+### ✅ Phase 3 — Package Combiner + Agentic Mode — DONE
 **Goal:** Pengguna bisa mix section dari berbagai paket; power user bisa pakai agentic generation
 
 | # | Task | Package |
@@ -248,7 +297,7 @@ Step 5: Quality Scorer      → Overall score, needsHumanReview flag
 
 **User stories delivered:** 6, 16
 
-### Phase 4 — Exam Experience
+### ✅ Phase 4 — Exam Experience — DONE
 **Goal:** Pengguna bisa mengerjakan ujian dengan antarmuka side-by-side, timer, auto-grade
 
 | # | Task | Package |
@@ -263,7 +312,7 @@ Step 5: Quality Scorer      → Overall score, needsHumanReview flag
 
 **User stories delivered:** 18, 19, 20, 21, 22, 23, 24, 25
 
-### Phase 5 — Analytics & Recommendations
+### 🔶 Phase 5 — Analytics & Recommendations — PARTIAL
 **Goal:** User bisa melihat performa, kelemahan, dan rekomendasi perbaikan
 
 | # | Task | Package |
@@ -276,7 +325,7 @@ Step 5: Quality Scorer      → Overall score, needsHumanReview flag
 
 **User stories delivered:** 26, 27, 28, 29, 30
 
-### Phase 6 — Community & Polish
+### 🟡 Phase 6 — Community & Polish — IN PROGRESS
 **Goal:** Platform terasa hidup dengan konten komunitas, trending, PWA offline support
 
 | # | Task | Package |
@@ -288,8 +337,11 @@ Step 5: Quality Scorer      → Overall score, needsHumanReview flag
 | 6.5 | PWA offline support for exam mode (cache questions) | `apps/web/` |
 | 6.6 | UI polish, loading skeletons, empty states, error boundaries | `apps/web/` |
 | 6.7 | i18n foundation (Bahasa Indonesia UI strings) | `apps/web/` |
+| 6.8 | Listening comprehension — merge TTS service, audio player, listening format | `all` |
+| 6.9 | OAuth login (Google, GitHub) via Better Auth social providers | `packages/auth/` + `apps/web/` |
+| 6.10 | Anti-cheat lite — tab-switch detection, inactivity timer, copy-paste blocking, user warning | `apps/web/` |
 
-**User stories delivered:** 34, 35, 36, 37
+**User stories delivered:** 34, 35, 36, 37, 38, 39, 40, 41
 
 ---
 
@@ -298,14 +350,10 @@ Step 5: Quality Scorer      → Overall score, needsHumanReview flag
 - Mobile app (React Native) — web-first, PWA covers mobile
 - Writing essay auto-grading — terlalu kompleks dan unreliable untuk AI saat ini
 - Speaking section generation — fokus ke reading comprehension dulu
-- Listening audio generation — perlu TTS, terlalu kompleks untuk initial release
-- Proctoring / anti-cheat
+- Full proctoring (webcam, face tracking, browser lockdown) — anti-cheat lite (tab-switch, inactivity, copy-paste) sudah in-scope
 - Subscription / payment system — open-source, self-hosted
 - Real-time multiplayer
-- Social features (comments, following) beyond ratings
-- Admin dashboard — semua management via DB langsung atau CLI
-- Email verification & password reset flow (bisa ditambah nanti)
-- OAuth login (Google, GitHub) — email/password saja untuk initial release
+- Social features (comments, following) beyond ratings and community channels
 
 ## Testing Strategy
 
