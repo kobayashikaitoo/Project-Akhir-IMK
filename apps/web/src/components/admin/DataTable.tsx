@@ -16,6 +16,7 @@ interface DataTableProps<T> {
   data: T[];
   columns: ColumnDef<T>[];
   isLoading?: boolean;
+  isFetching?: boolean;
   emptyMessage?: string;
   keyExtractor: (row: T) => string | number;
   page?: number;
@@ -25,6 +26,11 @@ interface DataTableProps<T> {
   sortDirection?: "asc" | "desc";
   onSort?: (column: string) => void;
   actions?: (row: T) => ReactNode;
+  actionsHeader?: string;
+  onRowClick?: (row: T) => void;
+  selectable?: boolean;
+  selectedIds?: Set<string>;
+  onSelectionChange?: (ids: Set<string>) => void;
   classNames?: {
     wrapper?: string;
     table?: string;
@@ -39,6 +45,7 @@ function DataTableInner<T>({
   data,
   columns,
   isLoading,
+  isFetching,
   emptyMessage = "No data.",
   keyExtractor,
   page,
@@ -48,6 +55,11 @@ function DataTableInner<T>({
   sortDirection,
   onSort,
   actions,
+  actionsHeader = "Actions",
+  onRowClick,
+  selectable,
+  selectedIds,
+  onSelectionChange,
   classNames = {},
 }: DataTableProps<T>) {
   const cn = {
@@ -59,7 +71,7 @@ function DataTableInner<T>({
     td: classNames.td ?? "px-4 py-3",
   };
 
-  const colCount = columns.length + (actions ? 1 : 0);
+  const colCount = columns.length + (selectable ? 1 : 0) + (actions ? 1 : 0);
 
   function renderCell(row: T, col: ColumnDef<T>): ReactNode {
     let value: ReactNode;
@@ -76,11 +88,45 @@ function DataTableInner<T>({
     return value;
   }
 
+  const allSelected =
+    selectable && data.length > 0 && data.every((row) => selectedIds?.has(String(keyExtractor(row))));
+
+  function toggleAll() {
+    if (!onSelectionChange) return;
+    if (allSelected) {
+      onSelectionChange(new Set());
+    } else {
+      onSelectionChange(new Set(data.map((row) => String(keyExtractor(row)))));
+    }
+  }
+
+  function toggleOne(key: string) {
+    if (!onSelectionChange) return;
+    const next = new Set(selectedIds);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    onSelectionChange(next);
+  }
+
   return (
     <div className={cn.wrapper}>
+      {isFetching && (
+        <div className="h-0.5 bg-[var(--matcha-500)] animate-pulse" />
+      )}
       <table className={cn.table}>
         <thead className={cn.thead}>
           <tr>
+            {selectable && (
+              <th className={`${cn.th} w-10`}>
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleAll}
+                  aria-label="Select all rows"
+                  className="cursor-pointer"
+                />
+              </th>
+            )}
             {columns.map((col) => (
               <th
                 key={col.id}
@@ -100,7 +146,7 @@ function DataTableInner<T>({
                 </span>
               </th>
             ))}
-            {actions && <th className={`${cn.th} text-right`}>Actions</th>}
+            {actions && <th className={`${cn.th} text-center ${actionsHeader === "" ? "w-12" : ""}`}>{actionsHeader}</th>}
           </tr>
         </thead>
         <tbody className={cn.tbody}>
@@ -117,23 +163,38 @@ function DataTableInner<T>({
               </td>
             </tr>
           ) : (
-            data.map((row) => (
-              <tr
-                key={keyExtractor(row)}
-                className="border-t border-[var(--oat-border)] hover:bg-[var(--oat-light)]/50 transition-colors"
-              >
-                {columns.map((col) => (
-                  <td key={col.id} className={`${cn.td} ${col.size ?? ""}`}>
-                    {renderCell(row, col)}
-                  </td>
-                ))}
-                {actions && (
-                  <td className={`${cn.td} text-right`}>
-                    {actions(row)}
-                  </td>
-                )}
-              </tr>
-            ))
+            data.map((row) => {
+              const key = String(keyExtractor(row));
+              return (
+                <tr
+                  key={key}
+                  className={`border-t border-[var(--oat-border)] transition-colors ${onRowClick ? "cursor-pointer" : ""} ${selectedIds?.has(key) ? "bg-[var(--matcha-300)]/10" : "hover:bg-[var(--oat-light)]/50"}`}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                >
+                  {selectable && (
+                    <td className={`${cn.td} w-10`} onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds?.has(key) ?? false}
+                        onChange={() => toggleOne(key)}
+                        aria-label={`Select row ${key}`}
+                        className="cursor-pointer"
+                      />
+                    </td>
+                  )}
+                  {columns.map((col) => (
+                    <td key={col.id} className={`${cn.td} ${col.size ?? ""}`}>
+                      {renderCell(row, col)}
+                    </td>
+                  ))}
+                  {actions && (
+                    <td className={`${cn.td} text-center`} onClick={(e) => e.stopPropagation()}>
+                      {actions(row)}
+                    </td>
+                  )}
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>

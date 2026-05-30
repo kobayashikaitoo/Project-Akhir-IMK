@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, desc, sql, count, ilike, or } from "drizzle-orm";
+import { eq, desc, sql, count, ilike, or, and, inArray, type SQL } from "drizzle-orm";
 import { adminProcedure, protectedProcedure, router } from "../index";
 import * as schema from "@labas/db";
 import { db } from "@labas/db";
@@ -59,18 +59,35 @@ export const adminRouter = router({
       z
         .object({
           search: z.string().optional(),
+          role: z.enum(["user", "admin"]).optional(),
+          suspended: z.boolean().optional(),
+          emailVerified: z.boolean().optional(),
           ...paginationSchema.shape,
         })
         .optional(),
     )
     .query(async ({ input }) => {
       const { limit, offset } = paginateDefaults(input);
-      const where = input?.search
-        ? or(
+
+      const conditions: ReturnType<typeof eq>[] = [];
+      if (input?.search) {
+        conditions.push(
+          or(
             ilike(schema.user.name, `%${input.search}%`),
             ilike(schema.user.email, `%${input.search}%`),
-          )
-        : undefined;
+          ) as unknown as ReturnType<typeof eq>,
+        );
+      }
+      if (input?.role) {
+        conditions.push(eq(schema.user.role, input.role));
+      }
+      if (input?.suspended !== undefined) {
+        conditions.push(eq(schema.user.suspended, input.suspended));
+      }
+      if (input?.emailVerified !== undefined) {
+        conditions.push(eq(schema.user.emailVerified, input.emailVerified));
+      }
+      const where = conditions.length > 0 ? and(...conditions) : undefined;
 
       const [total] = await db
         .select({ count: count() })
@@ -210,6 +227,70 @@ export const adminRouter = router({
       return { transactions };
     }),
 
+  listUsersWithCredits: adminProcedure
+    .input(
+      z
+        .object({
+          search: z.string().optional(),
+          sortBy: z.enum(["balance", "usage", "recent"]).optional(),
+          sortDir: z.enum(["asc", "desc"]).optional(),
+          ...paginationSchema.shape,
+        })
+        .optional(),
+    )
+    .query(async ({ input }) => {
+      const { limit, offset } = paginateDefaults(input);
+
+      const userWhere = input?.search
+        ? or(
+            ilike(schema.user.name, `%${input.search}%`),
+            ilike(schema.user.email, `%${input.search}%`),
+          )
+        : undefined;
+
+      const [total] = await db
+        .select({ count: count() })
+        .from(schema.user)
+        .where(userWhere);
+
+      let orderBy: SQL;
+      const dir = input?.sortDir === "asc" ? sql`ASC` : sql`DESC`;
+      switch (input?.sortBy) {
+        case "balance":
+          orderBy = sql`COALESCE(${schema.userCredit.tokenBalance}, 0) ${dir}`;
+          break;
+        case "usage":
+          orderBy = sql`COALESCE(${schema.userCredit.lifetimeTokensUsed}, 0) ${dir}`;
+          break;
+        case "recent":
+          orderBy = sql`COALESCE(${schema.userCredit.updatedAt}, ${schema.user.createdAt}) ${dir}`;
+          break;
+        default:
+          orderBy = desc(schema.user.createdAt) as unknown as SQL;
+      }
+
+      const users = await db
+        .select({
+          id: schema.user.id,
+          name: schema.user.name,
+          email: schema.user.email,
+          emailVerified: schema.user.emailVerified,
+          role: schema.user.role,
+          tokenBalance: sql<number>`COALESCE(${schema.userCredit.tokenBalance}, 0)`,
+          lifetimeTokensUsed: sql<number>`COALESCE(${schema.userCredit.lifetimeTokensUsed}, 0)`,
+          creditUpdatedAt: schema.userCredit.updatedAt,
+          createdAt: schema.user.createdAt,
+        })
+        .from(schema.user)
+        .leftJoin(schema.userCredit, eq(schema.userCredit.userId, schema.user.id))
+        .where(userWhere)
+        .orderBy(orderBy)
+        .limit(limit)
+        .offset(offset);
+
+      return { users, total: Number(total?.count ?? 0) };
+    }),
+
   // ── Featured Management ──────────────────────────────────
 
   toggleFeaturedPackage: adminProcedure
@@ -266,6 +347,7 @@ export const adminRouter = router({
         description: schema.testPackage.description,
         examTypeId: schema.testPackage.examTypeId,
         creatorUserId: schema.testPackage.creatorUserId,
+        creatorName: schema.user.name,
         isPublic: schema.testPackage.isPublic,
         isFeatured: schema.testPackage.isFeatured,
         totalQuestions: schema.testPackage.totalQuestions,
@@ -279,6 +361,7 @@ export const adminRouter = router({
       })
       .from(schema.testPackage)
       .leftJoin(schema.examType, eq(schema.testPackage.examTypeId, schema.examType.id))
+      .leftJoin(schema.user, eq(schema.testPackage.creatorUserId, schema.user.id))
       .where(eq(schema.testPackage.isFeatured, true))
       .orderBy(desc(schema.testPackage.updatedAt));
 
@@ -310,8 +393,25 @@ export const adminRouter = router({
         const [total] = await db.select({ count: count() }).from(schema.testPackage).where(where);
 
         const items = await db
-          .select()
+          .select({
+            id: schema.testPackage.id,
+            title: schema.testPackage.title,
+            description: schema.testPackage.description,
+            examTypeId: schema.testPackage.examTypeId,
+            creatorUserId: schema.testPackage.creatorUserId,
+            creatorName: schema.user.name,
+            isPublic: schema.testPackage.isPublic,
+            isFeatured: schema.testPackage.isFeatured,
+            totalQuestions: schema.testPackage.totalQuestions,
+            totalSections: schema.testPackage.totalSections,
+            estimatedDurationMin: schema.testPackage.estimatedDurationMin,
+            usageCount: schema.testPackage.usageCount,
+            avgRating: schema.testPackage.avgRating,
+            createdAt: schema.testPackage.createdAt,
+            updatedAt: schema.testPackage.updatedAt,
+          })
           .from(schema.testPackage)
+          .leftJoin(schema.user, eq(schema.testPackage.creatorUserId, schema.user.id))
           .where(where)
           .orderBy(desc(schema.testPackage.updatedAt))
           .limit(input.limit)
@@ -345,25 +445,42 @@ export const adminRouter = router({
       z
         .object({
           status: z.string().optional(),
+          search: z.string().optional(),
           ...paginationSchema.shape,
         })
         .optional(),
     )
     .query(async ({ input }) => {
       const { limit, offset } = paginateDefaults(input);
-      const where = input?.status
-        ? eq(schema.generationJob.status, input.status)
-        : undefined;
 
-      const [total] = await db
+      const conditions: ReturnType<typeof eq>[] = [];
+      if (input?.status) {
+        conditions.push(eq(schema.generationJob.status, input.status));
+      }
+      if (input?.search) {
+        conditions.push(
+          or(
+            ilike(schema.user.name, `%${input.search}%`),
+            ilike(schema.user.email, `%${input.search}%`),
+          ) as unknown as ReturnType<typeof eq>,
+        );
+      }
+      const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+      const baseQuery = db
         .select({ count: count() })
         .from(schema.generationJob)
+        .leftJoin(schema.user, eq(schema.generationJob.userId, schema.user.id))
         .where(where);
+
+      const [total] = await baseQuery;
 
       const jobs = await db
         .select({
           id: schema.generationJob.id,
           userId: schema.generationJob.userId,
+          userName: schema.user.name,
+          userEmail: schema.user.email,
           status: schema.generationJob.status,
           mode: schema.generationJob.mode,
           examTypeId: schema.generationJob.examTypeId,
@@ -376,6 +493,7 @@ export const adminRouter = router({
           completedAt: schema.generationJob.completedAt,
         })
         .from(schema.generationJob)
+        .leftJoin(schema.user, eq(schema.generationJob.userId, schema.user.id))
         .where(where)
         .orderBy(desc(schema.generationJob.createdAt))
         .limit(limit)
@@ -414,6 +532,9 @@ export const adminRouter = router({
     .input(
       z
         .object({
+          search: z.string().optional(),
+          examTypeId: z.string().optional(),
+          isPublic: z.boolean().optional(),
           ...paginationSchema.shape,
         })
         .optional(),
@@ -421,14 +542,64 @@ export const adminRouter = router({
     .query(async ({ input }) => {
       const { limit, offset } = paginateDefaults(input);
 
+      const conditions: ReturnType<typeof eq>[] = [];
+      if (input?.search) {
+        conditions.push(
+          or(
+            ilike(schema.question.questionText, `%${input.search}%`),
+            ilike(schema.question.passageText, `%${input.search}%`),
+          ) as unknown as ReturnType<typeof eq>,
+        );
+      }
+      if (input?.examTypeId) {
+        conditions.push(eq(schema.question.examTypeId, input.examTypeId));
+      }
+      if (input?.isPublic !== undefined) {
+        conditions.push(eq(schema.question.isPublic, input.isPublic));
+      }
+
+      const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+      const [total] = await db
+        .select({ count: count() })
+        .from(schema.question)
+        .where(where);
+
       const questions = await db
         .select()
         .from(schema.question)
+        .where(where)
         .orderBy(desc(schema.question.createdAt))
         .limit(limit)
         .offset(offset);
 
-      return { questions };
+      return { questions, total: Number(total?.count ?? 0) };
+    }),
+
+  bulkTogglePublic: adminProcedure
+    .input(
+      z.object({
+        questionIds: z.array(z.string().uuid()),
+        isPublic: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const updated = await db
+        .update(schema.question)
+        .set({ isPublic: input.isPublic })
+        .where(inArray(schema.question.id, input.questionIds))
+        .returning();
+
+      for (const q of updated) {
+        await audit(
+          ctx.session.user.id,
+          input.isPublic ? "publish_question" : "unpublish_question",
+          q.creatorUserId,
+          { questionId: q.id },
+        );
+      }
+
+      return { updated: updated.length };
     }),
 
   togglePublicAny: adminProcedure

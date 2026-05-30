@@ -18,6 +18,7 @@ export interface Question {
   examTypeName?: string | null;
   sectionTypeName?: string | null;
   skillTags?: string[] | null;
+  aiModel?: string | null;
   usageCount?: number;
   avgRating?: number | null;
   creatorName?: string | null;

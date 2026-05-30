@@ -23,6 +23,7 @@ import {
   testPackage,
   packageSection,
   sectionQuestion,
+  user,
 } from "@labas/db";
 import { and, eq, notInArray } from "drizzle-orm";
 import { encryptApiKey, decryptApiKey } from "./lib/encryption";
@@ -330,7 +331,13 @@ async function saveGeneratedArtifacts(
     });
     const sectionLabel =
       sectionSplits.length > 1 ? `${sectionSplits.length} sections` : input.section;
-    const pkgTitle = `AI Generated - ${input.examType} ${sectionLabel} - ${dateStr}`;
+    const [creator] = await db
+      .select({ name: user.name })
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1);
+    const creatorName = creator?.name ?? "Unknown";
+    const pkgTitle = `[${creatorName}] - ${input.examType} ${sectionLabel} - ${dateStr}`;
 
     const [pkg] = await db
       .insert(testPackage)
