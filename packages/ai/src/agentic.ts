@@ -76,7 +76,7 @@ async function step1GeneratePassage(
   client: OpenAICompatibleClient,
   input: GenerationInput,
   onToken?: (token: string) => void,
-): Promise<{ passage: string; title: string; tokensUsed: number }> {
+): Promise<{ passage: string; title: string; tokensUsed: number; reasoning?: string }> {
   const schema = getPassageJsonSchemaDescription();
   const prompt = `Generate an authentic, high-quality reading passage for ${input.examType} ${input.section.toLowerCase()} section at difficulty level ${input.difficulty}/5.
 
@@ -112,6 +112,7 @@ ${schema}`;
     passage: parsed.passage,
     title: typeof parsed.title === "string" ? parsed.title : "Untitled Passage",
     tokensUsed: result.usage?.total_tokens ?? 0,
+    reasoning: result.reasoning,
   };
 }
 
@@ -120,7 +121,7 @@ async function step2ValidatePassage(
   input: GenerationInput,
   passage: string,
   onToken?: (token: string) => void,
-): Promise<{ isValid: boolean; feedback: string; tokensUsed: number }> {
+): Promise<{ isValid: boolean; feedback: string; tokensUsed: number; reasoning?: string }> {
   const schema = getValidationJsonSchemaDescription();
   const prompt = `Validate this reading passage for a ${input.examType} exam at difficulty ${input.difficulty}/5.
 
@@ -158,6 +159,7 @@ ${schema}`;
     isValid: !!parsed.isValid,
     feedback: typeof parsed.feedback === "string" ? parsed.feedback : "No feedback",
     tokensUsed: result.usage?.total_tokens ?? 0,
+    reasoning: result.reasoning,
   };
 }
 
@@ -167,7 +169,7 @@ async function step3GenerateQuestions(
   passage: string,
   count: number,
   onToken?: (token: string) => void,
-): Promise<{ questions: Array<Record<string, unknown>>; tokensUsed: number }> {
+): Promise<{ questions: Array<Record<string, unknown>>; tokensUsed: number; reasoning?: string }> {
   const schema = getGenericQuestionJsonSchemaDescription();
 
   const prompt = `Using the following passage, generate ${count} reading comprehension questions for ${input.examType} exam.
@@ -220,6 +222,7 @@ Return ONLY valid JSON conforming to this schema.`;
   return {
     questions: parsed.questions as Array<Record<string, unknown>>,
     tokensUsed: result.usage?.total_tokens ?? 0,
+    reasoning: result.reasoning,
   };
 }
 
@@ -246,7 +249,7 @@ async function step4SelfValidate(
   passage: string,
   questions: Array<Record<string, unknown>>,
   onToken?: (token: string) => void,
-): Promise<{ confidence: number; issues: unknown[]; tokensUsed: number }> {
+): Promise<{ confidence: number; issues: unknown[]; tokensUsed: number; reasoning?: string }> {
   const qaPairs = questions
     .map((q, i) => formatQuestionForValidation(q, i))
     .join("\n\n");
@@ -289,7 +292,7 @@ ${schema}`;
   const confidence = typeof parsed.overallConfidence === "number" ? parsed.overallConfidence : 75;
   const issues = Array.isArray(parsed.issues) ? parsed.issues : [];
 
-  return { confidence, issues, tokensUsed: result.usage?.total_tokens ?? 0 };
+  return { confidence, issues, tokensUsed: result.usage?.total_tokens ?? 0, reasoning: result.reasoning };
 }
 
 export async function generatePassageForInput(
@@ -384,7 +387,7 @@ async function runAgenticQuestionPipeline(ctx: {
     accumulatedTokens += s3.tokensUsed;
     steps[2]!.status = "done";
     steps[2]!.message = `Generated ${rawQuestions.length} questions`;
-    steps[2]!.output = rawQuestions.map((q, i) => `${i + 1}. [${q.format}] ${q.questionText}`).join("\n");
+    steps[2]!.output = rawQuestions.map((q, i) => `${i + 1}. [${q.format}] ${q.questionText}`).join("\n") + (s3.reasoning ? `\n\n--- AI Thinking ---\n${s3.reasoning}` : "");
     report(2);
   } catch (err: any) {
     steps[2]!.status = "error";
@@ -400,10 +403,12 @@ async function runAgenticQuestionPipeline(ctx: {
 
   try {
     let selfValidationConfidence = 0;
+    let selfValidationReasoning: string | undefined;
     if (strategy === "full") {
       const s4 = await step4SelfValidate(client, input, passage, rawQuestions, onToken);
       accumulatedTokens += s4.tokensUsed;
       selfValidationConfidence = s4.confidence;
+      selfValidationReasoning = s4.reasoning;
     }
 
     let { valid, invalid, repairLog } = repairAndParseQuestions(rawQuestions, passage, {
@@ -469,6 +474,7 @@ async function runAgenticQuestionPipeline(ctx: {
       `Valid Questions: ${validQuestions.length}/${input.questionCount}`,
       `Repair Log:`,
       ...allRepairLogs,
+      ...(selfValidationReasoning ? [`\n--- AI Thinking ---\n${selfValidationReasoning}`] : []),
     ].join("\n");
     report(3);
   } catch (err: any) {
@@ -539,7 +545,7 @@ export async function generateQuestionsAgentic(
     accumulatedTokens += s1.tokensUsed;
     steps[0].status = "done";
     steps[0].message = `Generated: ${title}`;
-    steps[0].output = passage;
+    steps[0].output = passage + (s1.reasoning ? `\n\n--- AI Thinking ---\n${s1.reasoning}` : "");
     report(0);
   } catch (err: any) {
     steps[0].status = "error";
@@ -556,7 +562,8 @@ export async function generateQuestionsAgentic(
       accumulatedTokens += s2.tokensUsed;
       steps[1].status = s2.isValid ? "done" : "error";
       steps[1].message = s2.feedback;
-      steps[1].output = JSON.stringify({ isValid: s2.isValid, feedback: s2.feedback }, null, 2);
+      const feedbackOutput = JSON.stringify({ isValid: s2.isValid, feedback: s2.feedback }, null, 2);
+      steps[1].output = feedbackOutput + (s2.reasoning ? `\n\n--- AI Thinking ---\n${s2.reasoning}` : "");
       report(1);
     } catch (err: any) {
       steps[1].status = "error";

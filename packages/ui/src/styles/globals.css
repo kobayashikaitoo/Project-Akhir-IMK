@@ -35,6 +35,11 @@
   --ube-800: #43089f;
   --ube-900: #32037d;
   --pomegranate-400: #fc7981;
+  --pomegranate-50: #fff0f1;
+  --pomegranate-100: #ffdde0;
+  --pomegranate-600: #e0535c;
+  --lemon-600: #e8a528;
+  --slushie-600: #18bce5;
   --blueberry-800: #01418d;
   --dragonfruit-400: #e84393;
 
@@ -279,6 +284,11 @@
   --color-ube-800: var(--ube-800);
   --color-ube-900: var(--ube-900);
   --color-pomegranate-400: var(--pomegranate-400);
+  --color-pomegranate-50: var(--pomegranate-50);
+  --color-pomegranate-100: var(--pomegranate-100);
+  --color-pomegranate-600: var(--pomegranate-600);
+  --color-lemon-600: var(--lemon-600);
+  --color-slushie-600: var(--slushie-600);
   --color-blueberry-800: var(--blueberry-800);
   --color-dragonfruit-400: var(--dragonfruit-400);
   --color-oat-border: var(--oat-border);

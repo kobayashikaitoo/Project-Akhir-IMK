@@ -27,7 +27,7 @@ export async function regenerateQuestions(
   count: number,
   context: string,
   onToken?: (token: string) => void,
-): Promise<{ questions: Array<Record<string, unknown>>; tokensUsed: number }> {
+): Promise<{ questions: Array<Record<string, unknown>>; tokensUsed: number; reasoning?: string }> {
   const schema = getGenericQuestionJsonSchemaDescription();
 
   const prompt = `You are an expert exam question writer. ${context}
@@ -79,6 +79,7 @@ Return ONLY valid JSON conforming to this schema.`;
   return {
     questions: parsed.questions as Array<Record<string, unknown>>,
     tokensUsed: result.usage?.total_tokens ?? 0,
+    reasoning: result.reasoning,
   };
 }
 

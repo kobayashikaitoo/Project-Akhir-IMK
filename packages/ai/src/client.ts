@@ -24,6 +24,7 @@ export interface StreamCallbacks {
 
 export interface ChatCompletionResult {
   content: string;
+  reasoning?: string;
   usage?: {
     prompt_tokens?: number;
     completion_tokens?: number;
@@ -43,7 +44,7 @@ function log(
   console[level](`[${timestamp}] [AI-CLIENT] ${level.toUpperCase()}: ${message}${metaStr}`);
 }
 
-function parseSSELine(line: string): { content?: string; usage?: ChatCompletionResult["usage"] } | null {
+function parseSSELine(line: string): { content?: string; reasoning?: string; usage?: ChatCompletionResult["usage"] } | null {
   if (!line.startsWith("data: ")) return null;
   const data = line.slice(6).trim();
   if (data === "[DONE]") return null;
@@ -51,8 +52,13 @@ function parseSSELine(line: string): { content?: string; usage?: ChatCompletionR
     const chunk = JSON.parse(data);
     const choice = chunk.choices?.[0];
     const content = choice?.delta?.content ?? choice?.message?.content;
+    const reasoning = choice?.delta?.reasoning_content ?? choice?.message?.reasoning_content;
     const usage = chunk.usage;
-    return { content: typeof content === "string" ? content : undefined, usage };
+    return {
+      content: typeof content === "string" ? content : undefined,
+      reasoning: typeof reasoning === "string" ? reasoning : undefined,
+      usage,
+    };
   } catch {
     return null;
   }
@@ -61,11 +67,12 @@ function parseSSELine(line: string): { content?: string; usage?: ChatCompletionR
 async function readSSEStream(
   reader: any,
   callbacks: StreamCallbacks,
-): Promise<{ content: string; usage?: ChatCompletionResult["usage"]; rawBody: string }> {
+): Promise<{ content: string; reasoning?: string; usage?: ChatCompletionResult["usage"]; rawBody: string }> {
   const decoder = new TextDecoder();
   let buffer = "";
   let rawBody = "";
   let fullContent = "";
+  let fullReasoning = "";
   let lastUsage: ChatCompletionResult["usage"] | undefined;
 
   while (true) {
@@ -87,6 +94,9 @@ async function readSSEStream(
         fullContent += parsed.content;
         callbacks.onToken(parsed.content);
       }
+      if (parsed.reasoning) {
+        fullReasoning += parsed.reasoning;
+      }
       if (parsed.usage) {
         lastUsage = parsed.usage;
       }
@@ -100,6 +110,9 @@ async function readSSEStream(
       if (parsed.content) {
         fullContent += parsed.content;
         callbacks.onToken(parsed.content);
+      }
+      if (parsed.reasoning) {
+        fullReasoning += parsed.reasoning;
       }
       if (parsed.usage) {
         lastUsage = parsed.usage;
@@ -115,7 +128,7 @@ async function readSSEStream(
     }
   }
 
-  return { content: fullContent, usage: lastUsage, rawBody };
+  return { content: fullContent, reasoning: fullReasoning || undefined, usage: lastUsage, rawBody };
 }
 
 const MAX_TRUNCATION_RETRIES = 2;

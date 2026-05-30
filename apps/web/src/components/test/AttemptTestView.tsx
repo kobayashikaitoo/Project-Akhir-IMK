@@ -10,6 +10,7 @@ import { parseFurigana } from "@/lib/furigana";
 import type { Question, Package, PackageSection } from "@/lib/types";
 import { AttemptHeader } from "./attempt/AttemptHeader";
 import { FloatingNav } from "./attempt/FloatingNav";
+import { ResizableSplitPanel } from "./ResizableSplitPanel";
 import { FinishDialog } from "./attempt/FinishDialog";
 import { AbandonDialog } from "./attempt/AbandonDialog";
 
@@ -291,27 +292,28 @@ export function AttemptTestView({
         />
 
         {/* Main Exam Workspace */}
-        <main className="flex-1 flex overflow-hidden flex-col lg:flex-row">
-          {/* Left Column: Reading Passage */}
-          <section className="w-full lg:w-1/2 bg-[var(--pure-white)] overflow-y-auto custom-scrollbar p-6 md:p-12 border-b lg:border-b-0 lg:border-r border-[var(--oat-border)] h-1/2 lg:h-full">
-            <article className="max-w-2xl mx-auto">
-              <header className="mb-8">
-                <h1 className="text-3xl font-extrabold text-[var(--clay-black)] mb-4 leading-tight">
-                  {currentSection.title}
-                </h1>
-                <div className="flex gap-4 text-sm text-[var(--warm-silver)] italic">
-                  <span>Section {currentSectionIdx + 1} dari {pkg.sections.length}</span>
-                </div>
-              </header>
-              <div className="space-y-6 text-lg leading-relaxed text-[var(--warm-charcoal)] font-body whitespace-pre-wrap" dir={isRtl ? "rtl" : undefined}>
-                {useFurigana ? parseFurigana(passageToShow) : passageToShow}
-              </div>
-            </article>
-          </section>
-
-          {/* Right Column: Question Panel */}
-          <section ref={questionPanelRef} className="w-full lg:w-1/2 bg-[var(--warm-cream)] overflow-y-auto custom-scrollbar p-6 md:p-10 relative h-1/2 lg:h-full">
-            <div className="max-w-2xl mx-auto pb-32">
+        <main className="flex-1 overflow-hidden">
+          <ResizableSplitPanel
+            left={
+              <section className="h-full bg-[var(--pure-white)] overflow-y-auto custom-scrollbar p-6 md:p-12 border-b lg:border-b-0 lg:border-r border-[var(--oat-border)]">
+                <article className="max-w-2xl mx-auto">
+                  <header className="mb-8">
+                    <h1 className="text-3xl font-extrabold text-[var(--clay-black)] mb-4 leading-tight">
+                      {currentSection.title}
+                    </h1>
+                    <div className="flex gap-4 text-sm text-[var(--warm-silver)] italic">
+                      <span>Section {currentSectionIdx + 1} dari {pkg.sections.length}</span>
+                    </div>
+                  </header>
+                  <div className="space-y-6 text-lg leading-relaxed text-[var(--warm-charcoal)] font-body whitespace-pre-wrap" dir={isRtl ? "rtl" : undefined}>
+                    {useFurigana ? parseFurigana(passageToShow) : passageToShow}
+                  </div>
+                </article>
+              </section>
+            }
+            right={
+              <section ref={questionPanelRef} className="h-full bg-[var(--warm-cream)] overflow-y-auto custom-scrollbar p-6 md:p-10 relative">
+                <div className="max-w-2xl mx-auto pb-32">
               {/* Top bar: question counter + Selesai button */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
@@ -378,6 +380,8 @@ export function AttemptTestView({
               </nav>
             </div>
           </section>
+        }
+      />
         </main>
 
         <FloatingNav

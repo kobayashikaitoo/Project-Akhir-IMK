@@ -6,6 +6,12 @@ import { trpc } from "@/utils/trpc";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { triggerGlobalTour } from "@/components/TourGuide";
 import { CommunityModal } from "@/components/CommunityModal";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@labas/ui/components/sheet";
 
 interface NavItem {
   to: string;
@@ -57,7 +63,6 @@ const bottomItems: NavItem[] = [
 const mobileNavItems: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: "dashboard" },
   { to: "/generate", label: "AI Lab", icon: "auto_awesome" },
-  { to: "/jobs", label: "Jobs", icon: "schedule" },
   { to: "/bank", label: "Buat", icon: "database" },
   { to: "/packages", label: "Latihan", icon: "folder" },
 ];
@@ -93,6 +98,7 @@ export function Sidebar() {
   const { data: session } = authClient.useSession();
   const isLoggedIn = !!session;
   const [communityModalOpen, setCommunityModalOpen] = useState(false);
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
 
   const { data: adminData } = useQuery(
     trpc.admin.isAdmin.queryOptions(undefined, { enabled: isLoggedIn }),
@@ -291,7 +297,126 @@ export function Sidebar() {
             </Link>
           );
         })}
+        <button
+          onClick={() => setMobileSheetOpen(true)}
+          aria-label="More menu"
+          className={`flex flex-col items-center justify-center px-3 py-1.5 transition-all rounded-[var(--radius-lg)] cursor-pointer text-[var(--warm-charcoal)]`}
+        >
+          <NavIcon name="menu" />
+          <span className="text-[10px] font-medium uppercase tracking-wider mt-1">More</span>
+        </button>
       </nav>
+
+      {/* Mobile Sheet Drawer - Full Navigation */}
+      <Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
+        <SheetContent side="bottom" className="bg-[var(--warm-cream)] max-h-[80vh] overflow-y-auto rounded-t-[var(--radius-xl)] px-4 pb-10 pt-2">
+          <SheetHeader className="px-2 pt-2 pb-3">
+            <SheetTitle className="text-sm font-headline font-bold text-[var(--clay-black)]">Menu</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-4">
+            {navGroups.map((group) => (
+              <div key={group.label ?? "ungrouped"} className="space-y-1">
+                {group.label && (
+                  <p className="px-3 text-[10px] font-bold text-[var(--warm-charcoal)]/50 uppercase tracking-wider">
+                    {group.label}
+                  </p>
+                )}
+                {group.items.map((item) => {
+                  const isActive = location.pathname === item.to;
+                  return (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      onClick={() => setMobileSheetOpen(false)}
+                      className={`flex items-center gap-3 rounded-[var(--radius-lg)] transition-all py-3 px-3 cursor-pointer ${
+                        isActive
+                          ? "bg-[var(--matcha-300)] text-[var(--matcha-800)] font-semibold"
+                          : "text-[var(--warm-charcoal)] hover:bg-[var(--oat-light)] hover:text-[var(--clay-black)]"
+                      }`}
+                    >
+                      <NavIcon name={item.icon} />
+                      <span className="text-sm font-medium">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
+
+            {/* Admin section */}
+            {isAdmin && (
+              <div className="space-y-1 pt-2 border-t border-[var(--matcha-400)]/30">
+                <p className="px-3 text-[10px] font-bold text-[var(--matcha-600)] uppercase tracking-wider">Admin</p>
+                <Link
+                  to="/admin"
+                  onClick={() => setMobileSheetOpen(false)}
+                  className="flex items-center gap-3 rounded-[var(--radius-lg)] transition-all py-3 px-3 cursor-pointer text-[var(--warm-charcoal)] hover:bg-[var(--oat-light)] hover:text-[var(--clay-black)]"
+                >
+                  <NavIcon name="admin_panel_settings" />
+                  <span className="text-sm font-medium">Admin Panel</span>
+                </Link>
+              </div>
+            )}
+
+            {/* Bottom items */}
+            <div className="space-y-1 pt-2 border-t border-[var(--oat-border)]">
+              {bottomItems.map((item) => {
+                const isActive = location.pathname === item.to;
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setMobileSheetOpen(false)}
+                    className={`flex items-center gap-3 rounded-[var(--radius-lg)] transition-all py-3 px-3 cursor-pointer ${
+                      isActive
+                        ? "bg-[var(--matcha-300)] text-[var(--matcha-800)] font-semibold"
+                        : "text-[var(--warm-charcoal)] hover:bg-[var(--oat-light)] hover:text-[var(--clay-black)]"
+                    }`}
+                  >
+                    <NavIcon name={item.icon} />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </Link>
+                );
+              })}
+              <button
+                onClick={() => { setCommunityModalOpen(true); setMobileSheetOpen(false); }}
+                className="flex items-center gap-3 rounded-[var(--radius-lg)] transition-all py-3 px-3 cursor-pointer text-[var(--warm-charcoal)] hover:bg-[var(--oat-light)] hover:text-[var(--clay-black)] w-full text-left"
+              >
+                <NavIcon name="forum" />
+                <span className="text-sm font-medium">Komunitas</span>
+              </button>
+              <button
+                onClick={() => { triggerGlobalTour(); setMobileSheetOpen(false); }}
+                className="flex items-center gap-3 rounded-[var(--radius-lg)] transition-all py-3 px-3 cursor-pointer text-[var(--warm-charcoal)] hover:bg-[var(--oat-light)] hover:text-[var(--clay-black)] w-full text-left"
+              >
+                <NavIcon name="help" />
+                <span className="text-sm font-medium">Panduan</span>
+              </button>
+            </div>
+
+            {/* Auth row */}
+            <div className="pt-2 border-t border-[var(--oat-border)]">
+              {isLoggedIn ? (
+                <button
+                  onClick={() => { handleSignOut(); setMobileSheetOpen(false); }}
+                  className="flex items-center gap-3 rounded-[var(--radius-lg)] transition-all py-3 px-3 cursor-pointer text-[var(--warm-charcoal)] hover:bg-[var(--oat-light)] hover:text-[var(--clay-black)] w-full text-left"
+                >
+                  <NavIcon name="logout" />
+                  <span className="text-sm font-medium">Keluar</span>
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setMobileSheetOpen(false)}
+                  className="flex items-center gap-3 rounded-[var(--radius-lg)] transition-all py-3 px-3 cursor-pointer text-[var(--warm-charcoal)] hover:bg-[var(--oat-light)] hover:text-[var(--clay-black)]"
+                >
+                  <NavIcon name="login" />
+                  <span className="text-sm font-medium">Masuk</span>
+                </Link>
+              )}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

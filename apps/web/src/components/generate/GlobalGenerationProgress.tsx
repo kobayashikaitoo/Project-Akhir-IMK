@@ -25,6 +25,26 @@ const STEP_LABELS: Record<string, string> = {
   error: "Error",
 };
 
+function DetailsContent({ details }: { details: string }) {
+  const THINK_SEPARATOR = "\n\n--- AI Thinking ---\n";
+  const idx = details.indexOf(THINK_SEPARATOR);
+  if (idx === -1) return <>{details}</>;
+  const content = details.slice(0, idx);
+  const reasoning = details.slice(idx + THINK_SEPARATOR.length);
+  return (
+    <>
+      <div className="text-white/70">{content}</div>
+      <div className="mt-2 pt-2 border-t border-[var(--matcha-400)]/40">
+        <div className="flex items-center gap-1 text-[var(--matcha-400)] text-[8px] font-semibold mb-1">
+          <MaterialIcon name="psychology" className="text-xs" />
+          AI Thinking
+        </div>
+        <div className="text-[var(--matcha-300)]/90 italic">{reasoning}</div>
+      </div>
+    </>
+  );
+}
+
 function LogStatusIcon({ status }: { status: string }) {
   if (status === "done")
     return (
@@ -109,8 +129,8 @@ function TerminalLog({ logs, isRunning }: { logs: LogEntry[]; isRunning: boolean
               )}
             </div>
             {isExpanded && hasDetails && (
-              <div className="ml-5 mt-0.5 mb-1 p-2 rounded bg-black/60 border border-white/10 text-white/70 whitespace-pre-wrap text-[9px] leading-relaxed max-h-24 overflow-y-auto">
-                {log.details}
+              <div className="ml-5 mt-0.5 mb-1 p-2 rounded bg-black/60 border border-white/10 text-white/70 whitespace-pre-wrap text-[9px] leading-relaxed max-h-48 overflow-y-auto">
+                <DetailsContent details={log.details!} />
               </div>
             )}
           </div>
