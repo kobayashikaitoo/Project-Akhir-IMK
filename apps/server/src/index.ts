@@ -3,6 +3,7 @@ import { createContext } from "@labas/api/context";
 import { appRouter } from "@labas/api/routers/index";
 import { checkRateLimitAllowed } from "@labas/api/lib/rate-limit";
 import { recordBounce } from "@labas/api/lib/bounce";
+import { isDisposableEmail, hasValidMxRecord, getEmailDomain } from "@labas/api/lib/email-validator";
 import { auth } from "@labas/auth";
 import { env } from "@labas/env/server";
 import { withRequestId } from "@labas/api/logger";
@@ -58,6 +59,20 @@ app.use("/api/auth/sign-up/email", async (c, next) => {
   if (!allowed) {
     return c.json({ error: "Too many sign-up attempts. Please try again later." }, 429);
   }
+
+  try {
+    const body = await c.req.parseBody() as { email?: string };
+    const email = typeof body.email === "string" ? body.email : null;
+    if (email) {
+      const domain = getEmailDomain(email);
+      if (!domain || isDisposableEmail(email) || !(await hasValidMxRecord(domain))) {
+        return c.json({ error: "Invalid email address" }, 400);
+      }
+    }
+  } catch {
+    // Body parse error, let Better-Auth handle
+  }
+
   return next();
 });
 

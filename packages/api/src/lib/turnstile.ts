@@ -2,14 +2,18 @@ import { TRPCError } from "@trpc/server";
 import { env } from "@labas/env/server";
 import { logger } from "@labas/api/logger";
 
-/**
- * Validates a Cloudflare Turnstile token server-side.
- * No-ops when CLOUDFLARE_TURNSTILE_SECRET_KEY is not configured.
- * Throws BAD_REQUEST if the token is missing or invalid when the key is set.
- */
 export async function validateTurnstileToken(token: string | undefined): Promise<void> {
   const secretKey = env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
-  if (!secretKey) return;
+  const isDev = env.NODE_ENV !== "production";
+
+  if (isDev && !secretKey) return;
+
+  if (!secretKey) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "CAPTCHA is not configured. Set CLOUDFLARE_TURNSTILE_SECRET_KEY.",
+    });
+  }
 
   if (!token) {
     throw new TRPCError({ code: "BAD_REQUEST", message: "CAPTCHA verification is required." });
@@ -28,7 +32,14 @@ export async function validateTurnstileToken(token: string | undefined): Promise
     }
   } catch (err) {
     if (err instanceof TRPCError) throw err;
-    // Fail open if the Cloudflare API is unreachable — don't block legitimate users
-    logger.error("[TURNSTILE] Siteverify request failed, skipping", { error: (err as Error).message });
+    if (isDev) {
+      logger.warn("[TURNSTILE] Siteverify request failed, allowing in dev", { error: (err as Error).message });
+      return;
+    }
+    logger.error("[TURNSTILE] Siteverify request failed, rejecting request", { error: (err as Error).message });
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "CAPTCHA verification service temporarily unavailable.",
+    });
   }
 }

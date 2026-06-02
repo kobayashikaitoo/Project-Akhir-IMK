@@ -140,6 +140,12 @@ export const adminRouter = router({
         .returning();
       if (!u) throwNotFound("User");
 
+      if (input.suspended) {
+        await db
+          .delete(schema.session)
+          .where(eq(schema.session.userId, input.userId));
+      }
+
       await audit(ctx.session.user.id, input.suspended ? "suspend_user" : "unsuspend_user", input.userId);
       return u;
     }),

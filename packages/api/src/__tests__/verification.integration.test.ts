@@ -38,6 +38,14 @@ mock.module("../lib/bounce", () => ({
   recordBounce: mock(async () => {}),
 }));
 
+const mockIsDisposableEmail = mock((_email: string) => false);
+const mockHasValidMxRecord = mock(async (_domain: string) => true);
+mock.module("../lib/email-validator", () => ({
+  isDisposableEmail: mockIsDisposableEmail,
+  hasValidMxRecord: mockHasValidMxRecord,
+  getEmailDomain: (email: string) => email.split("@")[1]?.toLowerCase() ?? "",
+}));
+
 const mockSendOtpEmail = mock(async (_opts: unknown) => {});
 mock.module("../lib/email", () => ({
   sendOtpEmail: mockSendOtpEmail,

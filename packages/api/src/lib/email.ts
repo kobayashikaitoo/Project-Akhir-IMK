@@ -1,5 +1,7 @@
 import { env } from "@labas/env/server";
 import nodemailer from "nodemailer";
+import { recordBounce } from "./bounce";
+import { logger } from "@labas/api/logger";
 
 const smtpPort = Number(env.SMTP_PORT) || 587;
 const transporter = nodemailer.createTransport({
@@ -32,19 +34,32 @@ export async function sendOtpEmail({ to, otp, type }: SendOtpEmailProps) {
   const subject = subjects[type] || "Kode Verifikasi Labas";
   const message = messages[type] || "Kode verifikasi Anda:";
 
-  await transporter.sendMail({
-    from: env.SMTP_FROM,
-    to,
-    subject,
-    html: `
-      <div style="font-family: sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #16a34a;">Labas</h2>
-        <p>${message}</p>
-        <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
-          <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #111827;">${otp}</span>
+  try {
+    await transporter.sendMail({
+      from: env.SMTP_FROM,
+      to,
+      subject,
+      html: `
+        <div style="font-family: sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #16a34a;">Labas</h2>
+          <p>${message}</p>
+          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #111827;">${otp}</span>
+          </div>
+          <p style="color: #6b7280; font-size: 14px;">Kode berlaku selama 5 menit. Jangan bagikan kode ini kepada siapapun.</p>
         </div>
-        <p style="color: #6b7280; font-size: 14px;">Kode berlaku selama 5 menit. Jangan bagikan kode ini kepada siapapun.</p>
-      </div>
-    `,
-  });
+      `,
+    });
+  } catch (err) {
+    const error = err as { responseCode?: number; code?: string; message?: string };
+    if (error.responseCode && error.responseCode >= 400) {
+      logger.warn("[SMTP] Rejection detected, recording bounce", {
+        to,
+        responseCode: error.responseCode,
+        code: error.code,
+      });
+      await recordBounce(to, `SMTP ${error.responseCode}: ${error.message ?? error.code}`);
+    }
+    throw err;
+  }
 }
