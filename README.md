@@ -40,6 +40,23 @@ The project is a **Turborepo monorepo** managed with **Bun**. The web app talks 
 - **PWA** — Installable progressive web app
 - **Accessible UI** — Shared shadcn/ui components with skip links, proper ARIA, and focus management
 
+## Demo
+
+### AI Question Generation
+<video src="./apps/web/public/generate%20soal.mp4" controls width="100%">
+  <a href="./apps/web/public/generate%20soal.mp4">▶ Play video</a>
+</video>
+
+### Creating Practice Packages
+<video src="./apps/web/public/paket%20soal.mp4" controls width="100%">
+  <a href="./apps/web/public/paket%20soal.mp4">▶ Play video</a>
+</video>
+
+### Taking a Mock Test
+<video src="./apps/web/public/attempt%20exam.mp4" controls width="100%">
+  <a href="./apps/web/public/attempt%20exam.mp4">▶ Play video</a>
+</video>
+
 ## Supported Exams
 
 | Exam | Language | Notes |
