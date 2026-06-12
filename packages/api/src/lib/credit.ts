@@ -6,7 +6,7 @@ import { env } from "@labas/env/server";
 
 const COOLDOWN_DAYS = 7;
 
-async function getConfigRaw(key: string): Promise<string | null> {
+export async function getConfigRaw(key: string): Promise<string | null> {
   const [row] = await db
     .select({ value: platformConfig.value })
     .from(platformConfig)
@@ -211,4 +211,24 @@ export async function autoRefillIfEligible(
   const credit = await getUserCredit(userId);
 
   return { refilled: true, message: `Refilled ${amount.toLocaleString()} tokens from free pool.`, newBalance: credit.tokenBalance };
+}
+
+export function maskApiKey(key: string): string {
+  if (!key || key.length <= 8) return "···";
+  return key.slice(0, 4) + "···" + key.slice(-4);
+}
+
+export async function getPlatformAiConfig(): Promise<{
+  baseUrl: string;
+  model: string;
+  apiKey: string | null;
+  provider: string;
+}> {
+  const [baseUrl, model, apiKey, provider] = await Promise.all([
+    getConfig("platform_ai_base_url", () => env.PLATFORM_AI_BASE_URL || "https://api.openai.com/v1"),
+    getConfig("platform_ai_model", () => env.PLATFORM_AI_MODEL || "gpt-4o-mini"),
+    getConfigRaw("platform_ai_api_key"),
+    getConfig("platform_ai_provider", () => "openai"),
+  ]);
+  return { baseUrl, model, apiKey, provider };
 }

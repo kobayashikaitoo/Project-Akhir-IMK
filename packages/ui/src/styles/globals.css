@@ -395,3 +395,45 @@
     --space-x-reverse: 1;
   }
 }
+
+/* ── React Day Picker ──────────────────────────────────── */
+.rdp-custom {
+  --rdp-cell-size: 36px;
+}
+.rdp-custom .rdp-nav {
+  @apply flex items-center justify-between mb-2;
+}
+.rdp-custom .rdp-button_previous,
+.rdp-custom .rdp-button_next {
+  @apply h-8 w-8 flex items-center justify-center rounded-[var(--radius-md)] hover:bg-[var(--oat-light)] text-[var(--clay-black)] cursor-pointer;
+}
+.rdp-custom .rdp-month_caption {
+  @apply text-sm font-semibold text-[var(--clay-black)];
+}
+.rdp-custom .rdp-weekdays {
+  @apply flex;
+}
+.rdp-custom .rdp-weekday {
+  @apply text-xs font-medium text-[var(--warm-charcoal)] text-center py-1 w-9;
+}
+.rdp-custom .rdp-week {
+  @apply flex;
+}
+.rdp-custom .rdp-day {
+  @apply p-0;
+}
+.rdp-custom .rdp-day_button {
+  @apply h-9 w-9 rounded-[var(--radius-md)] text-sm text-[var(--clay-black)] hover:bg-[var(--oat-light)] transition-colors cursor-pointer;
+}
+.rdp-custom .rdp-day[aria-selected="true"] .rdp-day_button {
+  @apply bg-[var(--clay-black)] text-[var(--pure-white)] hover:bg-[var(--warm-charcoal)];
+}
+.rdp-custom .rdp-today .rdp-day_button {
+  @apply font-bold border-2 border-[var(--oat-border)];
+}
+.rdp-custom .rdp-outside .rdp-day_button {
+  @apply text-[var(--warm-silver)];
+}
+.rdp-custom .rdp-disabled .rdp-day_button {
+  @apply opacity-40 cursor-not-allowed;
+}

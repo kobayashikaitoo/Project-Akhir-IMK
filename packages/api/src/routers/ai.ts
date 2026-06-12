@@ -9,7 +9,7 @@ import { paginationSchema, paginateDefaults } from "../lib/pagination";
 import { throwNotFound, throwForbidden, throwBadRequest } from "../lib/errors";
 import { checkDailyBudget } from "../lib/rate-limit";
 import { decryptApiKey } from "../lib/encryption";
-import { isUserSuspended, getUserCredit, autoRefillIfEligible } from "../lib/credit";
+import { isUserSuspended, getUserCredit, autoRefillIfEligible, getConfig, getConfigRaw, getPlatformAiConfig } from "../lib/credit";
 import { env } from "@labas/env/server";
 
 const DAILY_TOKEN_BUDGET = 500_000;
@@ -34,10 +34,22 @@ export const aiRouter = router({
       let resolvedInput: GenerationInput;
 
       if (!hasApiKey) {
-        if (!env.FREE_CREDITS_ENABLED) {
+        const freeCreditsEnabled = await getConfig("free_credits_enabled", () => String(env.FREE_CREDITS_ENABLED));
+        if (freeCreditsEnabled !== "true") {
           throwBadRequest("Free credits are currently disabled. Use BYOK or contact admin.");
         }
-        if (!env.PLATFORM_AI_API_KEY) {
+        const platformCfg = await getPlatformAiConfig();
+        let platformApiKey = platformCfg.apiKey;
+        if (platformApiKey) {
+          try {
+            platformApiKey = decryptApiKey(platformApiKey);
+          } catch {
+            // stored as plaintext, use as-is
+          }
+        } else {
+          platformApiKey = env.PLATFORM_AI_API_KEY ?? null;
+        }
+        if (!platformApiKey) {
           throwBadRequest("Platform AI is not configured. Add your own API key in Settings.");
         }
         const credit = await getUserCredit(ctx.session.user.id);
@@ -50,9 +62,9 @@ export const aiRouter = router({
         resolvedInput = {
           ...input,
           apiKeyConfig: {
-            baseUrl: env.PLATFORM_AI_BASE_URL || "https://api.openai.com/v1",
-            apiKey: env.PLATFORM_AI_API_KEY,
-            model: env.PLATFORM_AI_MODEL || "gpt-4o-mini",
+            baseUrl: platformCfg.baseUrl,
+            apiKey: platformApiKey,
+            model: platformCfg.model,
             maxTokens: 4096,
           },
           _isPlatformGeneration: true,

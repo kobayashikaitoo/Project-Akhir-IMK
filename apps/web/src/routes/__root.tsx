@@ -8,6 +8,7 @@ import { Sidebar } from "@/components/sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { GlobalGenerationProgress } from "@/components/generate/GlobalGenerationProgress";
+import { AnnouncementBanner } from "@/components/ui/AnnouncementBanner";
 import { ErrorFallback } from "@/components/ErrorFallback";
 import type { RouteShell } from "@/lib/route-shell";
 import {
@@ -100,6 +101,7 @@ function RootComponent() {
         disableTransitionOnChange
         storageKey="labas-theme"
       >
+        <AnnouncementBanner />
         {shell === "fullscreen" ? (
           <div className="h-screen bg-background text-on-surface flex flex-col overflow-y-auto relative">
             <Outlet />

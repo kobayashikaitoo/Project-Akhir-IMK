@@ -25,6 +25,7 @@ const adminNavItems = [
   { to: "/admin/credits", label: "Credits", icon: "token" },
   { to: "/admin/jobs", label: "Jobs", icon: "schedule" },
   { to: "/admin/moderation", label: "Moderation", icon: "shield" },
+  { to: "/admin/settings", label: "Settings", icon: "settings" },
 ];
 
 function AdminLayout() {

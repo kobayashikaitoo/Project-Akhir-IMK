@@ -5,7 +5,8 @@ import * as schema from "@labas/db";
 import { db } from "@labas/db";
 import { paginationSchema, paginateDefaults } from "../lib/pagination";
 import { throwNotFound, throwForbidden, throwBadRequest } from "../lib/errors";
-import { getUserCredit, getLastRefillAt, getPoolUsage, getConfig, setConfig, autoRefillIfEligible } from "../lib/credit";
+import { getUserCredit, getLastRefillAt, getPoolUsage, getConfig, getConfigRaw, setConfig, autoRefillIfEligible, getPlatformAiConfig, maskApiKey } from "../lib/credit";
+import { encryptApiKey } from "../lib/encryption";
 import { env } from "@labas/env/server";
 
 function audit(adminUserId: string, action: string, targetUserId: string | null, details?: Record<string, unknown>) {
@@ -1163,4 +1164,109 @@ export const adminRouter = router({
       await audit(ctx.session.user.id, "set_config", null, { key: input.key, value: input.value });
       return { ok: true };
     }),
+
+  // ── Platform AI Configuration ─────────────────────────────────
+
+  getPlatformAiConfig: adminProcedure.query(async () => {
+    const config = await getPlatformAiConfig();
+    return {
+      provider: config.provider,
+      baseUrl: config.baseUrl,
+      model: config.model,
+      apiKeyConfigured: !!config.apiKey,
+      apiKeyPreview: config.apiKey ? maskApiKey(config.apiKey) : null,
+    };
+  }),
+
+  setPlatformAiConfig: adminProcedure
+    .input(
+      z.object({
+        provider: z.string().min(1).optional(),
+        baseUrl: z.string().optional(),
+        model: z.string().optional(),
+        apiKey: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const changedFields: string[] = [];
+
+      if (input.provider !== undefined) {
+        await setConfig("platform_ai_provider", input.provider);
+        changedFields.push("provider");
+      }
+      if (input.baseUrl !== undefined) {
+        await setConfig("platform_ai_base_url", input.baseUrl);
+        changedFields.push("base_url");
+      }
+      if (input.model !== undefined) {
+        await setConfig("platform_ai_model", input.model);
+        changedFields.push("model");
+      }
+      if (input.apiKey !== undefined && input.apiKey.length > 0) {
+        const encrypted = encryptApiKey(input.apiKey);
+        await setConfig("platform_ai_api_key", encrypted);
+        changedFields.push("api_key");
+      }
+
+      if (changedFields.length === 0) {
+        throwBadRequest("No changes provided");
+      }
+
+      await audit(ctx.session.user.id, "platform_ai_config_updated", null, {
+        changed_fields: changedFields,
+        ...(changedFields.includes("model") && input.model ? { model: input.model } : {}),
+        ...(changedFields.includes("provider") && input.provider ? { provider: input.provider } : {}),
+        ...(changedFields.includes("api_key") ? { api_key_updated: true } : {}),
+      });
+
+      return { ok: true, changedFields };
+    }),
+
+  // ── Announcement Management ─────────────────────────────────
+
+  getAnnouncement: adminProcedure.query(async () => {
+    const raw = await getConfigRaw("active_announcement");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as {
+        message: string;
+        severity: "info" | "warning" | "error";
+        active: boolean;
+        createdAt: string;
+        expiresAt: string | null;
+      };
+    } catch {
+      return null;
+    }
+  }),
+
+  setAnnouncement: adminProcedure
+    .input(
+      z.object({
+        message: z.string().min(1).max(2000),
+        severity: z.enum(["info", "warning", "error"]),
+        expiresAt: z.string().nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const value = JSON.stringify({
+        message: input.message,
+        severity: input.severity,
+        active: true,
+        createdAt: new Date().toISOString(),
+        expiresAt: input.expiresAt,
+      });
+      await setConfig("active_announcement", value);
+      await audit(ctx.session.user.id, "set_announcement", null, {
+        severity: input.severity,
+        hasExpiry: !!input.expiresAt,
+      });
+      return { ok: true };
+    }),
+
+  deleteAnnouncement: adminProcedure.mutation(async ({ ctx }) => {
+    await db.delete(schema.platformConfig).where(eq(schema.platformConfig.key, "active_announcement"));
+    await audit(ctx.session.user.id, "delete_announcement", null);
+    return { ok: true };
+  }),
 });

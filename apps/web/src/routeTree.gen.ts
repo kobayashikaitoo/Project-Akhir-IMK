@@ -32,6 +32,7 @@ import { Route as ProfileUserIdRouteImport } from './routes/profile.$userId'
 import { Route as PackageIdRouteImport } from './routes/package.$id'
 import { Route as AttemptIdRouteImport } from './routes/attempt.$id'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
 import { Route as AdminJobsRouteImport } from './routes/admin.jobs'
 import { Route as AdminFeaturedRouteImport } from './routes/admin.featured'
@@ -156,6 +157,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminModerationRoute = AdminModerationRouteImport.update({
   id: '/moderation',
   path: '/moderation',
@@ -222,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/admin/featured': typeof AdminFeaturedRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/moderation': typeof AdminModerationRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/attempt/$id': typeof AttemptIdRoute
   '/package/$id': typeof PackageIdRouteWithChildren
@@ -254,6 +261,7 @@ export interface FileRoutesByTo {
   '/admin/featured': typeof AdminFeaturedRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/moderation': typeof AdminModerationRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/attempt/$id': typeof AttemptIdRoute
   '/profile/$userId': typeof ProfileUserIdRoute
@@ -287,6 +295,7 @@ export interface FileRoutesById {
   '/admin/featured': typeof AdminFeaturedRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/moderation': typeof AdminModerationRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/attempt/$id': typeof AttemptIdRoute
   '/package/$id': typeof PackageIdRouteWithChildren
@@ -322,6 +331,7 @@ export interface FileRouteTypes {
     | '/admin/featured'
     | '/admin/jobs'
     | '/admin/moderation'
+    | '/admin/settings'
     | '/admin/users'
     | '/attempt/$id'
     | '/package/$id'
@@ -354,6 +364,7 @@ export interface FileRouteTypes {
     | '/admin/featured'
     | '/admin/jobs'
     | '/admin/moderation'
+    | '/admin/settings'
     | '/admin/users'
     | '/attempt/$id'
     | '/profile/$userId'
@@ -386,6 +397,7 @@ export interface FileRouteTypes {
     | '/admin/featured'
     | '/admin/jobs'
     | '/admin/moderation'
+    | '/admin/settings'
     | '/admin/users'
     | '/attempt/$id'
     | '/package/$id'
@@ -583,6 +595,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/moderation': {
       id: '/admin/moderation'
       path: '/moderation'
@@ -648,6 +667,7 @@ interface AdminRouteChildren {
   AdminFeaturedRoute: typeof AdminFeaturedRoute
   AdminJobsRoute: typeof AdminJobsRoute
   AdminModerationRoute: typeof AdminModerationRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -658,6 +678,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFeaturedRoute: AdminFeaturedRoute,
   AdminJobsRoute: AdminJobsRoute,
   AdminModerationRoute: AdminModerationRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
