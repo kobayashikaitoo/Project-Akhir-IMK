@@ -346,7 +346,7 @@ export const adminRouter = router({
       return updated;
     }),
 
-  listFeatured: protectedProcedure.query(async () => {
+  listFeatured: adminProcedure.query(async () => {
     const packages = await db
       .select({
         id: schema.testPackage.id,

@@ -172,7 +172,18 @@ export const aiRouter = router({
         .limit(limit)
         .offset(offset);
 
-      return { jobs: rows, total: Number(total?.count ?? 0) };
+      const sanitizedRows = rows.map((row) => {
+        if (!row.resultJson || typeof row.resultJson !== "object") return row;
+        const rj = row.resultJson as Record<string, unknown>;
+        if (!Array.isArray(rj.questions)) return row;
+        const sanitizedQuestions = (rj.questions as Array<Record<string, unknown>>).map((q) => {
+          const { correctAnswer, explanation, ...rest } = q;
+          return rest;
+        });
+        return { ...row, resultJson: { ...rj, questions: sanitizedQuestions } as typeof row.resultJson };
+      });
+
+      return { jobs: sanitizedRows, total: Number(total?.count ?? 0) };
     }),
 
   tokenUsageToday: protectedProcedure.query(async ({ ctx }) => {
