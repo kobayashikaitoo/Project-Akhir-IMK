@@ -6,32 +6,39 @@ import { examType, sectionType } from "./schema";
 const db = drizzle(loadDatabaseUrl());
 
 const examTypes = [
-  { id: "IELTS", name: "IELTS Academic", language: "English", description: "International English Language Testing System" },
-  { id: "TOEFL", name: "TOEFL iBT", language: "English", description: "Test of English as a Foreign Language" },
-  { id: "JLPT", name: "JLPT", language: "Japanese", description: "Japanese-Language Proficiency Test" },
-  { id: "HSK", name: "HSK", language: "Chinese", description: "Hanyu Shuiping Kaoshi" },
-  { id: "GOETHE", name: "Goethe-Zertifikat", language: "German", description: "Goethe-Zertifikat German proficiency test" },
-  { id: "TOPIK", name: "TOPIK", language: "Korean", description: "Test of Proficiency in Korean" },
-  { id: "TOAFL", name: "TOAFL", language: "Arabic", description: "Test of Arabic as a Foreign Language" },
-  { id: "DELE", name: "DELE", language: "Spanish", description: "Diplomas de Español como Lengua Extranjera" },
+  { id: "MATEMATIKA", name: "Matematika", language: "Indonesian", description: "Matematika SMA (Aljabar, Trigonometri, Kalkulus, Geometri)" },
+  { id: "FISIKA", name: "Fisika", language: "Indonesian", description: "Fisika SMA (Kinematika, Dinamika, Termodinamika, Listrik & Magnet)" },
+  { id: "KIMIA", name: "Kimia", language: "Indonesian", description: "Kimia SMA (Stoikiometri, Asam Basa, Kimia Organik, Laju Reaksi)" },
+  { id: "BIOLOGI", name: "Biologi", language: "Indonesian", description: "Biologi SMA (Sel, Metabolisme, Genetika, Ekologi & Evolusi)" },
+  { id: "BINGGRIS", name: "Bahasa Inggris", language: "English", description: "Bahasa Inggris SMA (Reading Comprehension, Grammar, Text Types)" },
 ];
 
 const sectionTypes = [
-  { id: "READING", name: "Reading" },
-  { id: "WRITING", name: "Writing" },
-  { id: "LISTENING", name: "Listening" },
-  { id: "SPEAKING", name: "Speaking" },
+  { id: "READING", name: "Pemahaman Teori" },
+  { id: "WRITING", name: "Latihan Soal" },
 ];
 
 async function seed() {
-  console.log("Seeding exam_type table...");
+  console.log("Seeding exam_type table with SMA subjects...");
   for (const et of examTypes) {
-    await db.insert(examType).values(et).onConflictDoNothing();
+    await db.insert(examType).values(et).onConflictDoUpdate({
+      target: examType.id,
+      set: {
+        name: et.name,
+        language: et.language,
+        description: et.description,
+      },
+    });
   }
 
-  console.log("Seeding section_type table...");
+  console.log("Seeding section_type table with SMA section formats...");
   for (const st of sectionTypes) {
-    await db.insert(sectionType).values(st).onConflictDoNothing();
+    await db.insert(sectionType).values(st).onConflictDoUpdate({
+      target: sectionType.id,
+      set: {
+        name: st.name,
+      },
+    });
   }
 
   console.log("Done.");
@@ -43,3 +50,4 @@ seed()
     console.error(err);
     process.exit(1);
   });
+

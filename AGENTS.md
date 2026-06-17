@@ -1,4 +1,4 @@
-# AGENTS.md — Labas Project Guide
+# AGENTS.md — Pijar Project Guide
 
 > This file is for AI agents. Read this first before making any changes.
 
@@ -6,7 +6,7 @@
 
 ## 1. Project Identity
 
-- **Name:** `labas` — AI-powered multi-language test practice platform.
+- **Name:** `pijar` — Aplikasi Pembelajaran Interaktif Pelajar (Clay-inspired gamified school learning platform for SMA).
 - **Repo type:** Turborepo monorepo (Bun workspaces).
 - **Workspace packages:** `apps/*`, `packages/*`.
 - **Runtime & package manager:** **Bun** (`packageManager: "bun@1.3.14"`).
@@ -18,13 +18,13 @@
 
 | Layer | Technology | Notes |
 |-------|------------|-------|
-| Frontend | React 19 + Vite + TanStack Router | File-based routing. **Not Next.js.** |
+| Frontend | React 19 + Vite + TanStack Router | File-based routing. **Not Next.js.** Font: Quicksand & Nunito. |
 | Backend | Hono + tRPC | Entry: `apps/server/src/index.ts`. Port 3000. |
 | DB Engine | PostgreSQL | Managed via Drizzle. |
 | DB ORM | Drizzle ORM | **Not Prisma.** |
-| Auth | Better-Auth | Email/password. |
-| UI | shadcn/ui (shared) | Lives in `packages/ui`. Imported as `@labas/ui/components/*`. |
-| AI | OpenAI-compatible API | User-managed API keys via Settings UI. |
+| Auth | Better-Auth | Email/password, Google/GitHub OAuth. |
+| UI | shadcn/ui (shared) | Lives in `packages/ui`. Imported as `@labas/ui/components/*`. Clay theme styled. |
+| AI | OpenAI-compatible API | User-managed API keys via Settings UI (Tutor AI assistant). |
 | Build | Turborepo + `tsdown` | Server compiled with `tsdown`. |
 
 ---
@@ -32,7 +32,7 @@
 ## 3. Architecture Overview
 
 ```
-labas/
+pijar/
 ├── apps/
 │   ├── web/          # Frontend (Vite, TanStack Router) — Port 5173
 │   └── server/       # Backend (Hono, tRPC) — Port 3000
@@ -41,7 +41,7 @@ labas/
 │   ├── api/          # tRPC routers & business logic
 │   ├── auth/         # Better-Auth configuration
 │   ├── db/           # Drizzle schema, queries, migrations
-│   ├── ai/           # AI generation: prompts, schemas, agentic pipeline
+│   ├── ai/           # AI generation: prompts, schemas, Tutor AI pipeline
 │   ├── env/          # Shared environment validation
 │   └── config/       # Shared TypeScript configs
 ```
@@ -72,7 +72,7 @@ bun run db:push          # Push schema changes to PostgreSQL
 bun run db:studio        # Open Drizzle Studio UI
 bun run db:migrate       # Run migrations
 bun run db:generate      # Generate migration files
-bun run db:seed          # Seed reference data (exam types, etc.)
+bun run db:seed          # Seed reference data (subjects, modules, etc.)
 bun run db:start         # Start local DB (if configured)
 bun run db:stop          # Stop local DB
 
@@ -139,7 +139,7 @@ Detail pages with long scrollable content (e.g. `package.$id.index.tsx`, `attemp
 ```
 
 Rules:
-- Primary CTA ("Mulai Latihan", "Coba Lagi") and secondary actions (Edit, Share) live in the sticky header — **never only at the bottom** of a long page.
+- Primary CTA ("Mulai Belajar", "Coba Lagi") and secondary actions (Edit, Share) live in the sticky header — **never only at the bottom** of a long page.
 - Breadcrumb inside the header is `text-xs` and truncates the current page title to `max-w-[240px]`.
 - On small screens (`sm:` breakpoint), button text labels hide (`hidden sm:inline`) leaving only icons.
 
@@ -265,20 +265,13 @@ export const Route = createFileRoute("/my-route")({
 
 ---
 
-## 9. AI Generation Context
+## 9. AI Generation Context & Tutor AI
 
 - AI logic is centralized in **`packages/ai/`**.
-- Key files:
-  - `src/schemas.ts` — Zod schemas for questions, generation input, and output.
-  - `src/prompts.ts` — Prompt builders for quick mode.
-  - `src/agentic.ts` — Multi-step agentic generation pipeline (passage → validate → questions → self-check).
-- Adding a new question format requires updates to:
-  1. `packages/ai/src/schemas.ts` (enum + discriminated union)
-  2. `packages/ai/src/prompts.ts` (format description)
-  3. `packages/ai/src/agentic.ts` (format schema string)
-  4. `packages/api/src/routers/attempt.ts` (answer normalization)
-  5. `apps/web/src/lib/generate-constants.ts` (format metadata + allowed exams)
-  6. `apps/web/src/lib/exam-constants.ts` (format string list)
+- The AI agents act as an interactive **Tutor AI (Asisten Belajar)** designed for teenagers/high schoolers:
+  1. **Dynamic Quiz Generator**: Automatically generates age-appropriate multiple-choice, true/false, or fill-in-the-blank questions based on the selected school subject (Matematika, Fisika, Kimia, Biologi, Bahasa Inggris) and specific topics.
+  2. **Adaptive Learning Guide**: Tailors question difficulty dynamically according to the student's score history. If a student scores high, the AI generates slightly more challenging questions (UTBK/SNBT level). If the student struggles, it provides simplified concept breakdowns and gentler exercises to prevent frustration and boredom.
+  3. **Zod Validation Schemas**: Standardizes output formatting (`packages/ai/src/schemas.ts`) to ensure generated quizzes are perfectly auto-gradeable and safe for the split-screen UI player.
 
 ---
 
@@ -387,4 +380,4 @@ export const Route = createFileRoute("/my-route")({
 
 ---
 
-_Last updated: 2026-05-25_
+_Last updated: 2026-06-15_

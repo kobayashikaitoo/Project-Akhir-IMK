@@ -6,7 +6,6 @@ import { Button } from "@labas/ui/components/button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/error-utils";
 import { authClient } from "@/lib/auth-client";
-import { CommunityCard } from "@/components/settings/CommunityCard";
 
 export function AccountSettings() {
   const { data: session } = authClient.useSession();
@@ -159,8 +158,6 @@ export function AccountSettings() {
           </form>
         </CardContent>
       </Card>
-
-      <CommunityCard />
     </div>
   );
 }

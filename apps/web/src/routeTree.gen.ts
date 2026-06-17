@@ -9,44 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as SetupAvatarRouteImport } from './routes/setup-avatar'
 import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as PackagesRouteImport } from './routes/packages'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as LatihanSoalRouteImport } from './routes/latihan-soal'
 import { Route as LandingRouteImport } from './routes/landing'
-import { Route as JobsRouteImport } from './routes/jobs'
-import { Route as HistoryRouteImport } from './routes/history'
-import { Route as GenerateRouteImport } from './routes/generate'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as BankRouteImport } from './routes/bank'
-import { Route as AnalyticsRouteImport } from './routes/analytics'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as ProfileUserIdRouteImport } from './routes/profile.$userId'
-import { Route as PackageIdRouteImport } from './routes/package.$id'
-import { Route as AttemptIdRouteImport } from './routes/attempt.$id'
-import { Route as AdminUsersRouteImport } from './routes/admin.users'
-import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
-import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
-import { Route as AdminJobsRouteImport } from './routes/admin.jobs'
-import { Route as AdminFeaturedRouteImport } from './routes/admin.featured'
-import { Route as AdminCreditsRouteImport } from './routes/admin.credits'
-import { Route as AdminActivityRouteImport } from './routes/admin.activity'
-import { Route as PackageIdIndexRouteImport } from './routes/package.$id.index'
-import { Route as PackageIdTakeRouteImport } from './routes/package.$id.take'
-import { Route as PackageIdAttemptAttemptIdRouteImport } from './routes/package.$id.attempt.$attemptId'
+import { Route as SubjectSubjectIdRouteImport } from './routes/subject.$subjectId'
+import { Route as LatihanSoalAnalyticsRouteImport } from './routes/latihan-soal_.analytics'
+import { Route as LatihanSoalGradeRouteImport } from './routes/latihan-soal_.$grade'
+import { Route as SubjectSubjectIdChapterIdRouteImport } from './routes/subject.$subjectId_.$chapterId'
 
-const VerifyEmailRoute = VerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SetupAvatarRoute = SetupAvatarRouteImport.update({
   id: '/setup-avatar',
   path: '/setup-avatar',
@@ -57,11 +33,6 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/settings.lazy').then((d) => d.Route))
-const PackagesRoute = PackagesRouteImport.update({
-  id: '/packages',
-  path: '/packages',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() => import('./routes/packages.lazy').then((d) => d.Route))
 const MeRoute = MeRouteImport.update({
   id: '/me',
   path: '/me',
@@ -72,9 +43,9 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LeaderboardRoute = LeaderboardRouteImport.update({
-  id: '/leaderboard',
-  path: '/leaderboard',
+const LatihanSoalRoute = LatihanSoalRouteImport.update({
+  id: '/latihan-soal',
+  path: '/latihan-soal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LandingRoute = LandingRouteImport.update({
@@ -82,44 +53,9 @@ const LandingRoute = LandingRouteImport.update({
   path: '/landing',
   getParentRoute: () => rootRouteImport,
 } as any)
-const JobsRoute = JobsRouteImport.update({
-  id: '/jobs',
-  path: '/jobs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HistoryRoute = HistoryRouteImport.update({
-  id: '/history',
-  path: '/history',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() => import('./routes/history.lazy').then((d) => d.Route))
-const GenerateRoute = GenerateRouteImport.update({
-  id: '/generate',
-  path: '/generate',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() => import('./routes/generate.lazy').then((d) => d.Route))
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BankRoute = BankRouteImport.update({
-  id: '/bank',
-  path: '/bank',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() => import('./routes/bank.lazy').then((d) => d.Route))
-const AnalyticsRoute = AnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SplatRoute = SplatRouteImport.update({
@@ -132,315 +68,140 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
-const AdminIndexRoute = AdminIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AdminRoute,
-} as any)
-const ProfileUserIdRoute = ProfileUserIdRouteImport.update({
-  id: '/profile/$userId',
-  path: '/profile/$userId',
+const SubjectSubjectIdRoute = SubjectSubjectIdRouteImport.update({
+  id: '/subject/$subjectId',
+  path: '/subject/$subjectId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PackageIdRoute = PackageIdRouteImport.update({
-  id: '/package/$id',
-  path: '/package/$id',
+const LatihanSoalAnalyticsRoute = LatihanSoalAnalyticsRouteImport.update({
+  id: '/latihan-soal_/analytics',
+  path: '/latihan-soal/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AttemptIdRoute = AttemptIdRouteImport.update({
-  id: '/attempt/$id',
-  path: '/attempt/$id',
+const LatihanSoalGradeRoute = LatihanSoalGradeRouteImport.update({
+  id: '/latihan-soal_/$grade',
+  path: '/latihan-soal/$grade',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSettingsRoute = AdminSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminModerationRoute = AdminModerationRouteImport.update({
-  id: '/moderation',
-  path: '/moderation',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminJobsRoute = AdminJobsRouteImport.update({
-  id: '/jobs',
-  path: '/jobs',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFeaturedRoute = AdminFeaturedRouteImport.update({
-  id: '/featured',
-  path: '/featured',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCreditsRoute = AdminCreditsRouteImport.update({
-  id: '/credits',
-  path: '/credits',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminActivityRoute = AdminActivityRouteImport.update({
-  id: '/activity',
-  path: '/activity',
-  getParentRoute: () => AdminRoute,
-} as any)
-const PackageIdIndexRoute = PackageIdIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => PackageIdRoute,
-} as any)
-const PackageIdTakeRoute = PackageIdTakeRouteImport.update({
-  id: '/take',
-  path: '/take',
-  getParentRoute: () => PackageIdRoute,
-} as any)
-const PackageIdAttemptAttemptIdRoute =
-  PackageIdAttemptAttemptIdRouteImport.update({
-    id: '/attempt/$attemptId',
-    path: '/attempt/$attemptId',
-    getParentRoute: () => PackageIdRoute,
+const SubjectSubjectIdChapterIdRoute =
+  SubjectSubjectIdChapterIdRouteImport.update({
+    id: '/subject/$subjectId_/$chapterId',
+    path: '/subject/$subjectId/$chapterId',
+    getParentRoute: () => rootRouteImport,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/admin': typeof AdminRouteWithChildren
-  '/analytics': typeof AnalyticsRoute
-  '/bank': typeof BankRoute
   '/dashboard': typeof DashboardRoute
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/generate': typeof GenerateRoute
-  '/history': typeof HistoryRoute
-  '/jobs': typeof JobsRoute
   '/landing': typeof LandingRoute
-  '/leaderboard': typeof LeaderboardRoute
+  '/latihan-soal': typeof LatihanSoalRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
-  '/packages': typeof PackagesRoute
   '/settings': typeof SettingsRoute
   '/setup-avatar': typeof SetupAvatarRoute
-  '/verify-email': typeof VerifyEmailRoute
-  '/admin/activity': typeof AdminActivityRoute
-  '/admin/credits': typeof AdminCreditsRoute
-  '/admin/featured': typeof AdminFeaturedRoute
-  '/admin/jobs': typeof AdminJobsRoute
-  '/admin/moderation': typeof AdminModerationRoute
-  '/admin/settings': typeof AdminSettingsRoute
-  '/admin/users': typeof AdminUsersRoute
-  '/attempt/$id': typeof AttemptIdRoute
-  '/package/$id': typeof PackageIdRouteWithChildren
-  '/profile/$userId': typeof ProfileUserIdRoute
-  '/admin/': typeof AdminIndexRoute
-  '/package/$id/take': typeof PackageIdTakeRoute
-  '/package/$id/': typeof PackageIdIndexRoute
-  '/package/$id/attempt/$attemptId': typeof PackageIdAttemptAttemptIdRoute
+  '/latihan-soal/$grade': typeof LatihanSoalGradeRoute
+  '/latihan-soal/analytics': typeof LatihanSoalAnalyticsRoute
+  '/subject/$subjectId': typeof SubjectSubjectIdRoute
+  '/subject/$subjectId/$chapterId': typeof SubjectSubjectIdChapterIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/analytics': typeof AnalyticsRoute
-  '/bank': typeof BankRoute
   '/dashboard': typeof DashboardRoute
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/generate': typeof GenerateRoute
-  '/history': typeof HistoryRoute
-  '/jobs': typeof JobsRoute
   '/landing': typeof LandingRoute
-  '/leaderboard': typeof LeaderboardRoute
+  '/latihan-soal': typeof LatihanSoalRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
-  '/packages': typeof PackagesRoute
   '/settings': typeof SettingsRoute
   '/setup-avatar': typeof SetupAvatarRoute
-  '/verify-email': typeof VerifyEmailRoute
-  '/admin/activity': typeof AdminActivityRoute
-  '/admin/credits': typeof AdminCreditsRoute
-  '/admin/featured': typeof AdminFeaturedRoute
-  '/admin/jobs': typeof AdminJobsRoute
-  '/admin/moderation': typeof AdminModerationRoute
-  '/admin/settings': typeof AdminSettingsRoute
-  '/admin/users': typeof AdminUsersRoute
-  '/attempt/$id': typeof AttemptIdRoute
-  '/profile/$userId': typeof ProfileUserIdRoute
-  '/admin': typeof AdminIndexRoute
-  '/package/$id/take': typeof PackageIdTakeRoute
-  '/package/$id': typeof PackageIdIndexRoute
-  '/package/$id/attempt/$attemptId': typeof PackageIdAttemptAttemptIdRoute
+  '/latihan-soal/$grade': typeof LatihanSoalGradeRoute
+  '/latihan-soal/analytics': typeof LatihanSoalAnalyticsRoute
+  '/subject/$subjectId': typeof SubjectSubjectIdRoute
+  '/subject/$subjectId/$chapterId': typeof SubjectSubjectIdChapterIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/admin': typeof AdminRouteWithChildren
-  '/analytics': typeof AnalyticsRoute
-  '/bank': typeof BankRoute
   '/dashboard': typeof DashboardRoute
-  '/forgot-password': typeof ForgotPasswordRoute
-  '/generate': typeof GenerateRoute
-  '/history': typeof HistoryRoute
-  '/jobs': typeof JobsRoute
   '/landing': typeof LandingRoute
-  '/leaderboard': typeof LeaderboardRoute
+  '/latihan-soal': typeof LatihanSoalRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
-  '/packages': typeof PackagesRoute
   '/settings': typeof SettingsRoute
   '/setup-avatar': typeof SetupAvatarRoute
-  '/verify-email': typeof VerifyEmailRoute
-  '/admin/activity': typeof AdminActivityRoute
-  '/admin/credits': typeof AdminCreditsRoute
-  '/admin/featured': typeof AdminFeaturedRoute
-  '/admin/jobs': typeof AdminJobsRoute
-  '/admin/moderation': typeof AdminModerationRoute
-  '/admin/settings': typeof AdminSettingsRoute
-  '/admin/users': typeof AdminUsersRoute
-  '/attempt/$id': typeof AttemptIdRoute
-  '/package/$id': typeof PackageIdRouteWithChildren
-  '/profile/$userId': typeof ProfileUserIdRoute
-  '/admin/': typeof AdminIndexRoute
-  '/package/$id/take': typeof PackageIdTakeRoute
-  '/package/$id/': typeof PackageIdIndexRoute
-  '/package/$id/attempt/$attemptId': typeof PackageIdAttemptAttemptIdRoute
+  '/latihan-soal_/$grade': typeof LatihanSoalGradeRoute
+  '/latihan-soal_/analytics': typeof LatihanSoalAnalyticsRoute
+  '/subject/$subjectId': typeof SubjectSubjectIdRoute
+  '/subject/$subjectId_/$chapterId': typeof SubjectSubjectIdChapterIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/$'
-    | '/admin'
-    | '/analytics'
-    | '/bank'
     | '/dashboard'
-    | '/forgot-password'
-    | '/generate'
-    | '/history'
-    | '/jobs'
     | '/landing'
-    | '/leaderboard'
+    | '/latihan-soal'
     | '/login'
     | '/me'
-    | '/packages'
     | '/settings'
     | '/setup-avatar'
-    | '/verify-email'
-    | '/admin/activity'
-    | '/admin/credits'
-    | '/admin/featured'
-    | '/admin/jobs'
-    | '/admin/moderation'
-    | '/admin/settings'
-    | '/admin/users'
-    | '/attempt/$id'
-    | '/package/$id'
-    | '/profile/$userId'
-    | '/admin/'
-    | '/package/$id/take'
-    | '/package/$id/'
-    | '/package/$id/attempt/$attemptId'
+    | '/latihan-soal/$grade'
+    | '/latihan-soal/analytics'
+    | '/subject/$subjectId'
+    | '/subject/$subjectId/$chapterId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/$'
-    | '/analytics'
-    | '/bank'
     | '/dashboard'
-    | '/forgot-password'
-    | '/generate'
-    | '/history'
-    | '/jobs'
     | '/landing'
-    | '/leaderboard'
+    | '/latihan-soal'
     | '/login'
     | '/me'
-    | '/packages'
     | '/settings'
     | '/setup-avatar'
-    | '/verify-email'
-    | '/admin/activity'
-    | '/admin/credits'
-    | '/admin/featured'
-    | '/admin/jobs'
-    | '/admin/moderation'
-    | '/admin/settings'
-    | '/admin/users'
-    | '/attempt/$id'
-    | '/profile/$userId'
-    | '/admin'
-    | '/package/$id/take'
-    | '/package/$id'
-    | '/package/$id/attempt/$attemptId'
+    | '/latihan-soal/$grade'
+    | '/latihan-soal/analytics'
+    | '/subject/$subjectId'
+    | '/subject/$subjectId/$chapterId'
   id:
     | '__root__'
     | '/'
     | '/$'
-    | '/admin'
-    | '/analytics'
-    | '/bank'
     | '/dashboard'
-    | '/forgot-password'
-    | '/generate'
-    | '/history'
-    | '/jobs'
     | '/landing'
-    | '/leaderboard'
+    | '/latihan-soal'
     | '/login'
     | '/me'
-    | '/packages'
     | '/settings'
     | '/setup-avatar'
-    | '/verify-email'
-    | '/admin/activity'
-    | '/admin/credits'
-    | '/admin/featured'
-    | '/admin/jobs'
-    | '/admin/moderation'
-    | '/admin/settings'
-    | '/admin/users'
-    | '/attempt/$id'
-    | '/package/$id'
-    | '/profile/$userId'
-    | '/admin/'
-    | '/package/$id/take'
-    | '/package/$id/'
-    | '/package/$id/attempt/$attemptId'
+    | '/latihan-soal_/$grade'
+    | '/latihan-soal_/analytics'
+    | '/subject/$subjectId'
+    | '/subject/$subjectId_/$chapterId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SplatRoute: typeof SplatRoute
-  AdminRoute: typeof AdminRouteWithChildren
-  AnalyticsRoute: typeof AnalyticsRoute
-  BankRoute: typeof BankRoute
   DashboardRoute: typeof DashboardRoute
-  ForgotPasswordRoute: typeof ForgotPasswordRoute
-  GenerateRoute: typeof GenerateRoute
-  HistoryRoute: typeof HistoryRoute
-  JobsRoute: typeof JobsRoute
   LandingRoute: typeof LandingRoute
-  LeaderboardRoute: typeof LeaderboardRoute
+  LatihanSoalRoute: typeof LatihanSoalRoute
   LoginRoute: typeof LoginRoute
   MeRoute: typeof MeRoute
-  PackagesRoute: typeof PackagesRoute
   SettingsRoute: typeof SettingsRoute
   SetupAvatarRoute: typeof SetupAvatarRoute
-  VerifyEmailRoute: typeof VerifyEmailRoute
-  AttemptIdRoute: typeof AttemptIdRoute
-  PackageIdRoute: typeof PackageIdRouteWithChildren
-  ProfileUserIdRoute: typeof ProfileUserIdRoute
+  LatihanSoalGradeRoute: typeof LatihanSoalGradeRoute
+  LatihanSoalAnalyticsRoute: typeof LatihanSoalAnalyticsRoute
+  SubjectSubjectIdRoute: typeof SubjectSubjectIdRoute
+  SubjectSubjectIdChapterIdRoute: typeof SubjectSubjectIdChapterIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/verify-email': {
-      id: '/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof VerifyEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/setup-avatar': {
       id: '/setup-avatar'
       path: '/setup-avatar'
@@ -453,13 +214,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/packages': {
-      id: '/packages'
-      path: '/packages'
-      fullPath: '/packages'
-      preLoaderRoute: typeof PackagesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/me': {
@@ -476,11 +230,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/leaderboard': {
-      id: '/leaderboard'
-      path: '/leaderboard'
-      fullPath: '/leaderboard'
-      preLoaderRoute: typeof LeaderboardRouteImport
+    '/latihan-soal': {
+      id: '/latihan-soal'
+      path: '/latihan-soal'
+      fullPath: '/latihan-soal'
+      preLoaderRoute: typeof LatihanSoalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/landing': {
@@ -490,60 +244,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LandingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/jobs': {
-      id: '/jobs'
-      path: '/jobs'
-      fullPath: '/jobs'
-      preLoaderRoute: typeof JobsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/history': {
-      id: '/history'
-      path: '/history'
-      fullPath: '/history'
-      preLoaderRoute: typeof HistoryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/generate': {
-      id: '/generate'
-      path: '/generate'
-      fullPath: '/generate'
-      preLoaderRoute: typeof GenerateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/bank': {
-      id: '/bank'
-      path: '/bank'
-      fullPath: '/bank'
-      preLoaderRoute: typeof BankRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/analytics': {
-      id: '/analytics'
-      path: '/analytics'
-      fullPath: '/analytics'
-      preLoaderRoute: typeof AnalyticsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$': {
@@ -560,169 +265,51 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/': {
-      id: '/admin/'
-      path: '/'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/profile/$userId': {
-      id: '/profile/$userId'
-      path: '/profile/$userId'
-      fullPath: '/profile/$userId'
-      preLoaderRoute: typeof ProfileUserIdRouteImport
+    '/subject/$subjectId': {
+      id: '/subject/$subjectId'
+      path: '/subject/$subjectId'
+      fullPath: '/subject/$subjectId'
+      preLoaderRoute: typeof SubjectSubjectIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/package/$id': {
-      id: '/package/$id'
-      path: '/package/$id'
-      fullPath: '/package/$id'
-      preLoaderRoute: typeof PackageIdRouteImport
+    '/latihan-soal_/analytics': {
+      id: '/latihan-soal_/analytics'
+      path: '/latihan-soal/analytics'
+      fullPath: '/latihan-soal/analytics'
+      preLoaderRoute: typeof LatihanSoalAnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/attempt/$id': {
-      id: '/attempt/$id'
-      path: '/attempt/$id'
-      fullPath: '/attempt/$id'
-      preLoaderRoute: typeof AttemptIdRouteImport
+    '/latihan-soal_/$grade': {
+      id: '/latihan-soal_/$grade'
+      path: '/latihan-soal/$grade'
+      fullPath: '/latihan-soal/$grade'
+      preLoaderRoute: typeof LatihanSoalGradeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/users': {
-      id: '/admin/users'
-      path: '/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/settings': {
-      id: '/admin/settings'
-      path: '/settings'
-      fullPath: '/admin/settings'
-      preLoaderRoute: typeof AdminSettingsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/moderation': {
-      id: '/admin/moderation'
-      path: '/moderation'
-      fullPath: '/admin/moderation'
-      preLoaderRoute: typeof AdminModerationRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/jobs': {
-      id: '/admin/jobs'
-      path: '/jobs'
-      fullPath: '/admin/jobs'
-      preLoaderRoute: typeof AdminJobsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/featured': {
-      id: '/admin/featured'
-      path: '/featured'
-      fullPath: '/admin/featured'
-      preLoaderRoute: typeof AdminFeaturedRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/credits': {
-      id: '/admin/credits'
-      path: '/credits'
-      fullPath: '/admin/credits'
-      preLoaderRoute: typeof AdminCreditsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/activity': {
-      id: '/admin/activity'
-      path: '/activity'
-      fullPath: '/admin/activity'
-      preLoaderRoute: typeof AdminActivityRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/package/$id/': {
-      id: '/package/$id/'
-      path: '/'
-      fullPath: '/package/$id/'
-      preLoaderRoute: typeof PackageIdIndexRouteImport
-      parentRoute: typeof PackageIdRoute
-    }
-    '/package/$id/take': {
-      id: '/package/$id/take'
-      path: '/take'
-      fullPath: '/package/$id/take'
-      preLoaderRoute: typeof PackageIdTakeRouteImport
-      parentRoute: typeof PackageIdRoute
-    }
-    '/package/$id/attempt/$attemptId': {
-      id: '/package/$id/attempt/$attemptId'
-      path: '/attempt/$attemptId'
-      fullPath: '/package/$id/attempt/$attemptId'
-      preLoaderRoute: typeof PackageIdAttemptAttemptIdRouteImport
-      parentRoute: typeof PackageIdRoute
+    '/subject/$subjectId_/$chapterId': {
+      id: '/subject/$subjectId_/$chapterId'
+      path: '/subject/$subjectId/$chapterId'
+      fullPath: '/subject/$subjectId/$chapterId'
+      preLoaderRoute: typeof SubjectSubjectIdChapterIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
 
-interface AdminRouteChildren {
-  AdminActivityRoute: typeof AdminActivityRoute
-  AdminCreditsRoute: typeof AdminCreditsRoute
-  AdminFeaturedRoute: typeof AdminFeaturedRoute
-  AdminJobsRoute: typeof AdminJobsRoute
-  AdminModerationRoute: typeof AdminModerationRoute
-  AdminSettingsRoute: typeof AdminSettingsRoute
-  AdminUsersRoute: typeof AdminUsersRoute
-  AdminIndexRoute: typeof AdminIndexRoute
-}
-
-const AdminRouteChildren: AdminRouteChildren = {
-  AdminActivityRoute: AdminActivityRoute,
-  AdminCreditsRoute: AdminCreditsRoute,
-  AdminFeaturedRoute: AdminFeaturedRoute,
-  AdminJobsRoute: AdminJobsRoute,
-  AdminModerationRoute: AdminModerationRoute,
-  AdminSettingsRoute: AdminSettingsRoute,
-  AdminUsersRoute: AdminUsersRoute,
-  AdminIndexRoute: AdminIndexRoute,
-}
-
-const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
-
-interface PackageIdRouteChildren {
-  PackageIdTakeRoute: typeof PackageIdTakeRoute
-  PackageIdIndexRoute: typeof PackageIdIndexRoute
-  PackageIdAttemptAttemptIdRoute: typeof PackageIdAttemptAttemptIdRoute
-}
-
-const PackageIdRouteChildren: PackageIdRouteChildren = {
-  PackageIdTakeRoute: PackageIdTakeRoute,
-  PackageIdIndexRoute: PackageIdIndexRoute,
-  PackageIdAttemptAttemptIdRoute: PackageIdAttemptAttemptIdRoute,
-}
-
-const PackageIdRouteWithChildren = PackageIdRoute._addFileChildren(
-  PackageIdRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
-  AdminRoute: AdminRouteWithChildren,
-  AnalyticsRoute: AnalyticsRoute,
-  BankRoute: BankRoute,
   DashboardRoute: DashboardRoute,
-  ForgotPasswordRoute: ForgotPasswordRoute,
-  GenerateRoute: GenerateRoute,
-  HistoryRoute: HistoryRoute,
-  JobsRoute: JobsRoute,
   LandingRoute: LandingRoute,
-  LeaderboardRoute: LeaderboardRoute,
+  LatihanSoalRoute: LatihanSoalRoute,
   LoginRoute: LoginRoute,
   MeRoute: MeRoute,
-  PackagesRoute: PackagesRoute,
   SettingsRoute: SettingsRoute,
   SetupAvatarRoute: SetupAvatarRoute,
-  VerifyEmailRoute: VerifyEmailRoute,
-  AttemptIdRoute: AttemptIdRoute,
-  PackageIdRoute: PackageIdRouteWithChildren,
-  ProfileUserIdRoute: ProfileUserIdRoute,
+  LatihanSoalGradeRoute: LatihanSoalGradeRoute,
+  LatihanSoalAnalyticsRoute: LatihanSoalAnalyticsRoute,
+  SubjectSubjectIdRoute: SubjectSubjectIdRoute,
+  SubjectSubjectIdChapterIdRoute: SubjectSubjectIdChapterIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

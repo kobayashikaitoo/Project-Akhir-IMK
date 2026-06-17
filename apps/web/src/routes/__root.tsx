@@ -1,13 +1,10 @@
 import { Toaster } from "@labas/ui/components/sonner";
 import type { QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { HeadContent, Outlet, createRootRouteWithContext, useRouterState } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import { Sidebar } from "@/components/sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { useSidebar } from "@/hooks/use-sidebar";
-import { GlobalGenerationProgress } from "@/components/generate/GlobalGenerationProgress";
 import { AnnouncementBanner } from "@/components/ui/AnnouncementBanner";
 import { ErrorFallback } from "@/components/ErrorFallback";
 import type { RouteShell } from "@/lib/route-shell";
@@ -122,15 +119,8 @@ function RootComponent() {
             </main>
           </div>
         )}
-        {shell !== "public" && <GlobalGenerationProgress />}
         <Toaster richColors />
       </ThemeProvider>
-      {import.meta.env.DEV && (
-        <>
-          <TanStackRouterDevtools position="bottom-left" />
-          <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
-        </>
-      )}
     </>
   );
 }

@@ -1,3 +1,6 @@
-export function MaterialIcon({ name, className = "" }: { name: string; className?: string }) {
-  return <span className={`material-symbols-outlined ${className}`}>{name}</span>;
+import { HTMLAttributes } from "react";
+
+export function MaterialIcon({ name, className = "", ...props }: { name: string } & HTMLAttributes<HTMLSpanElement>) {
+  return <span className={`material-symbols-outlined ${className}`} {...props}>{name}</span>;
 }
+

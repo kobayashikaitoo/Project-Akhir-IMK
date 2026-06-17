@@ -1,9 +1,6 @@
 import { initTRPC, TRPCError } from "@trpc/server";
-import { eq } from "drizzle-orm";
 import { logger } from "./logger";
 import type { Context } from "./context";
-import { db } from "@labas/db";
-import { user } from "@labas/db";
 
 export const t = initTRPC.context<Context>().create();
 
@@ -37,12 +34,4 @@ export const protectedProcedure = baseProcedure.use(({ ctx, next }) => {
       session: ctx.session,
     },
   });
-});
-
-export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
-  const [u] = await db.select().from(user).where(eq(user.id, ctx.session.user.id)).limit(1);
-  if (!u || u.role !== "admin") {
-    throw new TRPCError({ code: "FORBIDDEN", message: "Admin access required" });
-  }
-  return next({ ctx: { ...ctx, adminUser: u } });
 });

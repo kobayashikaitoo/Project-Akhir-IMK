@@ -13,9 +13,10 @@ export function createAuth() {
 
       schema: schema,
     }),
-    trustedOrigins: [env.CORS_ORIGIN],
+    trustedOrigins: env.CORS_ORIGIN.split(",").map((o) => o.trim()),
     emailAndPassword: {
       enabled: true,
+      autoSignIn: true,
     },
     user: {
       changeEmail: {
@@ -26,9 +27,24 @@ export function createAuth() {
     baseURL: env.BETTER_AUTH_URL,
     advanced: {
       defaultCookieAttributes: {
-        sameSite: "none",
-        secure: true,
+        sameSite: "lax",
+        secure: false,
         httpOnly: true,
+      },
+    },
+    databaseHooks: {
+      user: {
+        create: {
+          before: async (user) => {
+            console.log("Better Auth Database Hook - Creating User:", user.email);
+            return {
+              data: {
+                ...user,
+                emailVerified: true,
+              },
+            };
+          },
+        },
       },
     },
     plugins: [],

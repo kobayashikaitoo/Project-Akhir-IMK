@@ -3,35 +3,22 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@labas/ui/components/input";
 import { Label } from "@labas/ui/components/label";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
-import type { TurnstileInstance } from "@marsidev/react-turnstile";
-import { useRef, useState } from "react";
 
 import { authClient } from "@/lib/auth-client";
-import { trpc } from "@/utils/trpc";
 import { trackUmamiEvent, AnalyticsEvent } from "@/lib/umami";
 import { PasswordInput } from "@/components/ui/PasswordInput";
-import { TurnstileField, TURNSTILE_SITE_KEY } from "@/components/TurnstileField";
-import { VERIFY_EMAIL_CONTINUE_TOAST, VERIFY_EMAIL_SUCCESS_TOAST } from "@/lib/auth-messages";
 import { isSignUpDuplicateError } from "@/lib/signup-errors";
 
 import Loader from "./loader";
-
-const passwordSchema = z
-  .string()
-  .regex(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/,
-    "Password must be at least 8 characters with uppercase, lowercase, and number",
-  );
 
 const signUpSchema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.email("Invalid email address"),
-    password: passwordSchema,
+    password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string().min(1, "Confirm your password"),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -44,23 +31,6 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
     from: "/",
   });
   const { isPending } = authClient.useSession();
-  const sendOtpMutation = useMutation(trpc.verification.sendVerificationOtp.mutationOptions());
-  const [turnstileToken, setTurnstileToken] = useState<string | undefined>(undefined);
-  const turnstileRef = useRef<TurnstileInstance>(null);
-
-  const continueToVerification = async (email: string) => {
-    try {
-      await sendOtpMutation.mutateAsync({ email, turnstileToken });
-    } catch {
-      // sendVerificationOtp uses generic responses; still allow user to resend on verify page
-    }
-    turnstileRef.current?.reset();
-    setTurnstileToken(undefined);
-    navigate({
-      to: "/verify-email",
-      search: { email },
-    });
-  };
 
   const form = useForm({
     defaultValues: {
@@ -79,17 +49,15 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         {
           onSuccess: async () => {
             trackUmamiEvent(AnalyticsEvent.SIGN_UP);
-            await continueToVerification(value.email);
-            toast.success(VERIFY_EMAIL_SUCCESS_TOAST);
+            toast.success("Akun berhasil dibuat! Silakan pilih avatar Anda.");
+            await authClient.getSession();
+            navigate({ to: "/setup-avatar" });
           },
           onError: async (error) => {
             if (isSignUpDuplicateError(error)) {
-              await continueToVerification(value.email);
-              toast.message(VERIFY_EMAIL_CONTINUE_TOAST);
+              toast.error("Email sudah terdaftar. Silakan masuk menggunakan email tersebut.");
               return;
             }
-            turnstileRef.current?.reset();
-            setTurnstileToken(undefined);
             toast.error(error.error.message || error.error.statusText);
           },
         },
@@ -212,13 +180,6 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
             </form.Field>
           </div>
 
-          <TurnstileField
-            ref={turnstileRef}
-            onSuccess={setTurnstileToken}
-            onExpire={() => setTurnstileToken(undefined)}
-            onError={() => setTurnstileToken(undefined)}
-          />
-
           <form.Subscribe
             selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}
           >
@@ -226,7 +187,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
               <Button
                 type="submit"
                 className="w-full rounded-[var(--radius-lg)]"
-                disabled={!canSubmit || isSubmitting || (!!TURNSTILE_SITE_KEY && !turnstileToken)}
+                disabled={!canSubmit || isSubmitting}
               >
                 {isSubmitting ? "Submitting..." : "Sign Up"}
               </Button>

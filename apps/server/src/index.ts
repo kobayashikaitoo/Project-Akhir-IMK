@@ -10,8 +10,6 @@ import { withRequestId } from "@labas/api/logger";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
-import "@labas/api/queue";
-
 const app = new Hono();
 
 app.use("/*", async (c, next) => {
@@ -37,12 +35,14 @@ app.use("/*", async (c, next) => {
   c.res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
 });
 
+const allowedOrigins = env.CORS_ORIGIN.split(",").map((o) => o.trim());
+
 app.use(
   "/*",
   cors({
-    origin: env.CORS_ORIGIN,
+    origin: allowedOrigins,
     allowMethods: ["GET", "POST", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
+    allowHeaders: ["Content-Type", "Authorization", "User-Agent", "x-better-auth-client", "Accept", "Cookie"],
     credentials: true,
   }),
 );

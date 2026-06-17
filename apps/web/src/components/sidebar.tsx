@@ -1,11 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
-import { trpc } from "@/utils/trpc";
 import { useSidebar } from "@/hooks/use-sidebar";
-import { triggerGlobalTour } from "@/components/TourGuide";
-import { CommunityModal } from "@/components/CommunityModal";
 import {
   Sheet,
   SheetContent,
@@ -17,6 +13,7 @@ interface NavItem {
   to: string;
   label: string;
   icon: string;
+  disabled?: boolean;
 }
 
 interface NavGroup {
@@ -29,28 +26,20 @@ const navGroups: NavGroup[] = [
     items: [{ to: "/dashboard", label: "Dashboard", icon: "dashboard" }],
   },
   {
-    label: "Generate",
+    label: "Mata Pelajaran",
     items: [
-      { to: "/generate", label: "AI Lab", icon: "auto_awesome" },
-      { to: "/jobs", label: "Jobs", icon: "schedule" },
+      { to: "/subject/matematika", label: "Matematika", icon: "calculate" },
+      { to: "/subject/fisika", label: "Fisika", icon: "insights" },
+      { to: "/subject/kimia", label: "Kimia", icon: "science" },
+      { to: "/subject/biologi", label: "Biologi", icon: "spa" },
+      { to: "/subject/bahasa-inggris", label: "B. Inggris", icon: "translate" },
     ],
-  },
-  {
-    label: "Bank",
-    items: [{ to: "/bank", label: "Buat Paket", icon: "database" }],
   },
   {
     label: "Latihan",
     items: [
-      { to: "/packages", label: "Paket Soal", icon: "folder" },
-      { to: "/history", label: "Riwayat", icon: "history" },
-    ],
-  },
-  {
-    label: "Track",
-    items: [
-      { to: "/analytics", label: "Analytics", icon: "analytics" },
-      { to: "/leaderboard", label: "Klasemen", icon: "leaderboard" },
+      { to: "/latihan-soal", label: "Latihan Soal", icon: "edit_note" },
+      { to: "/latihan-soal/analytics", label: "Analytics", icon: "analytics" },
     ],
   },
 ];
@@ -62,9 +51,8 @@ const bottomItems: NavItem[] = [
 
 const mobileNavItems: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: "dashboard" },
-  { to: "/generate", label: "AI Lab", icon: "auto_awesome" },
-  { to: "/bank", label: "Buat", icon: "database" },
-  { to: "/packages", label: "Latihan", icon: "folder" },
+  { to: "/dashboard", label: "Materi", icon: "menu_book" },
+  { to: "/me", label: "Profil", icon: "person" },
 ];
 
 function NavIcon({ name }: { name: string }) {
@@ -72,11 +60,27 @@ function NavIcon({ name }: { name: string }) {
 }
 
 function NavLink({ item, isActive, collapsed }: { item: NavItem; isActive: boolean; collapsed: boolean }) {
-  const tourAttr = item.to !== "/dashboard" ? { "data-tour": `nav-${item.to.replace("/", "")}` } : {};
+  if (item.disabled) {
+    return (
+      <div
+        className={`flex items-center gap-3 rounded-[var(--radius-lg)] transition-all opacity-50 cursor-not-allowed ${
+          collapsed ? "justify-center py-3 px-2" : "py-3 px-3"
+        }`}
+        title={collapsed ? `${item.label} (Segera Hadir)` : undefined}
+      >
+        <NavIcon name={item.icon} />
+        {!collapsed && (
+          <span className="text-sm font-medium text-[var(--warm-charcoal)] flex items-center gap-2">
+            {item.label}
+            <span className="text-[9px] font-bold bg-[var(--oat-border)] rounded-full px-1.5 py-0.5 uppercase tracking-wider">Soon</span>
+          </span>
+        )}
+      </div>
+    );
+  }
   return (
     <Link
       to={item.to}
-      {...tourAttr}
       aria-current={isActive ? "page" : undefined}
       className={`flex items-center gap-3 rounded-[var(--radius-lg)] transition-all group clay-hover cursor-pointer ${
         isActive
@@ -97,13 +101,7 @@ export function Sidebar() {
   const { collapsed, toggle } = useSidebar();
   const { data: session } = authClient.useSession();
   const isLoggedIn = !!session;
-  const [communityModalOpen, setCommunityModalOpen] = useState(false);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
-
-  const { data: adminData } = useQuery(
-    trpc.admin.isAdmin.queryOptions(undefined, { enabled: isLoggedIn }),
-  );
-  const isAdmin = !!adminData?.isAdmin;
 
   async function handleSignOut() {
     await authClient.signOut();
@@ -112,7 +110,6 @@ export function Sidebar() {
 
   return (
     <>
-      <CommunityModal isOpen={communityModalOpen} onOpenChange={setCommunityModalOpen} />
       {/* Desktop Sidebar */}
       <aside
         className={`fixed left-0 top-0 h-full flex flex-col z-40 bg-[var(--warm-cream)] border-r border-[var(--oat-border)] hidden md:flex transition-all duration-300 overflow-y-auto ${
@@ -130,7 +127,7 @@ export function Sidebar() {
           />
           {!collapsed && (
             <p className="text-xs text-[var(--warm-charcoal)] uppercase tracking-widest font-semibold mt-1">
-              Exam Prep Portal
+              Learning Platform
             </p>
           )}
         </div>
@@ -143,39 +140,35 @@ export function Sidebar() {
                   {group.label}
                 </p>
               )}
-              {group.items.map((item) => {
-                const isActive =
-                  location.pathname === item.to ||
-                  (location.pathname.startsWith(`${item.to}/`) && item.to !== "/");
-                return (
-                  <NavLink
-                    key={item.to}
-                    item={item}
-                    isActive={isActive}
-                    collapsed={collapsed}
-                  />
-                );
-              })}
+              {(() => {
+                // Find the most specific matching path in this group
+                let bestMatch: string | null = null;
+                let bestLen = 0;
+                for (const item of group.items) {
+                  if (
+                    location.pathname === item.to ||
+                    (location.pathname.startsWith(`${item.to}/`) && item.to !== "/")
+                  ) {
+                    if (item.to.length > bestLen) {
+                      bestLen = item.to.length;
+                      bestMatch = item.to;
+                    }
+                  }
+                }
+                return group.items.map((item) => {
+                  const isActive = bestMatch === item.to;
+                  return (
+                    <NavLink
+                      key={item.to + item.label}
+                      item={item}
+                      isActive={isActive}
+                      collapsed={collapsed}
+                    />
+                  );
+                });
+              })()}
             </div>
           ))}
-
-          {isAdmin && (
-            <div className="space-y-1 pt-2 border-t border-[var(--matcha-400)]/30">
-              {!collapsed && (
-                <p className="px-3 text-[10px] font-bold text-[var(--matcha-600)] uppercase tracking-wider">
-                  Admin
-                </p>
-              )}
-              {[{ to: "/admin", label: "Admin Panel", icon: "admin_panel_settings" }].map((item) => {
-                const isActive =
-                  location.pathname === item.to ||
-                  (location.pathname.startsWith(`${item.to}/`) && item.to !== "/");
-                return (
-                  <NavLink key={item.to} item={item} isActive={isActive} collapsed={collapsed} />
-                );
-              })}
-            </div>
-          )}
         </nav>
 
         <div className="mt-auto space-y-1 pt-4 border-t border-[var(--oat-border)] w-full">
@@ -190,32 +183,6 @@ export function Sidebar() {
               />
             );
           })}
-
-          <button
-            type="button"
-            onClick={() => setCommunityModalOpen(true)}
-            aria-label="Komunitas WhatsApp"
-            className={`flex items-center gap-3 rounded-[var(--radius-lg)] transition-all clay-hover cursor-pointer text-[var(--warm-charcoal)] hover:bg-[var(--oat-light)] hover:text-[var(--clay-black)] w-full ${
-              collapsed ? "justify-center py-3 px-2" : "py-3 px-3 text-left"
-            }`}
-            title={collapsed ? "Komunitas" : undefined}
-          >
-            <NavIcon name="forum" />
-            {!collapsed && <span className="text-sm font-medium">Komunitas</span>}
-          </button>
-
-          {/* Help Tour Button */}
-          <button
-            onClick={triggerGlobalTour}
-            aria-label="Panduan"
-            className={`flex items-center gap-3 rounded-[var(--radius-lg)] transition-all clay-hover cursor-pointer text-[var(--warm-charcoal)] hover:bg-[var(--oat-light)] hover:text-[var(--clay-black)] w-full ${
-              collapsed ? "justify-center py-3 px-2" : "py-3 px-3 text-left"
-            }`}
-            title={collapsed ? "Panduan" : undefined}
-          >
-            <NavIcon name="help" />
-            {!collapsed && <span className="text-sm font-medium">Panduan</span>}
-          </button>
 
           {isLoggedIn ? (
             <button
@@ -279,11 +246,11 @@ export function Sidebar() {
 
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 pb-6 pt-3 bg-[var(--warm-cream)]/90 backdrop-blur-xl border-t border-[var(--oat-border)] rounded-t-[var(--radius-xl)]">
-        {mobileNavItems.map((item) => {
-          const isActive = location.pathname === item.to;
+        {mobileNavItems.map((item, i) => {
+          const isActive = i === 0 ? location.pathname === item.to : false;
           return (
             <Link
-              key={item.to}
+              key={item.label}
               to={item.to}
               aria-current={isActive ? "page" : undefined}
               className={`flex flex-col items-center justify-center px-3 py-1.5 transition-all rounded-[var(--radius-lg)] cursor-pointer ${
@@ -307,7 +274,7 @@ export function Sidebar() {
         </button>
       </nav>
 
-      {/* Mobile Sheet Drawer - Full Navigation */}
+      {/* Mobile Sheet Drawer */}
       <Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
         <SheetContent side="bottom" className="bg-[var(--warm-cream)] max-h-[80vh] overflow-y-auto rounded-t-[var(--radius-xl)] px-4 pb-10 pt-2">
           <SheetHeader className="px-2 pt-2 pb-3">
@@ -322,10 +289,24 @@ export function Sidebar() {
                   </p>
                 )}
                 {group.items.map((item) => {
+                  if (item.disabled) {
+                    return (
+                      <div
+                        key={item.label}
+                        className="flex items-center gap-3 rounded-[var(--radius-lg)] py-3 px-3 opacity-50 cursor-not-allowed"
+                      >
+                        <NavIcon name={item.icon} />
+                        <span className="text-sm font-medium text-[var(--warm-charcoal)] flex items-center gap-2">
+                          {item.label}
+                          <span className="text-[9px] font-bold bg-[var(--oat-border)] rounded-full px-1.5 py-0.5 uppercase tracking-wider">Soon</span>
+                        </span>
+                      </div>
+                    );
+                  }
                   const isActive = location.pathname === item.to;
                   return (
                     <Link
-                      key={item.to}
+                      key={item.to + item.label}
                       to={item.to}
                       onClick={() => setMobileSheetOpen(false)}
                       className={`flex items-center gap-3 rounded-[var(--radius-lg)] transition-all py-3 px-3 cursor-pointer ${
@@ -341,21 +322,6 @@ export function Sidebar() {
                 })}
               </div>
             ))}
-
-            {/* Admin section */}
-            {isAdmin && (
-              <div className="space-y-1 pt-2 border-t border-[var(--matcha-400)]/30">
-                <p className="px-3 text-[10px] font-bold text-[var(--matcha-600)] uppercase tracking-wider">Admin</p>
-                <Link
-                  to="/admin"
-                  onClick={() => setMobileSheetOpen(false)}
-                  className="flex items-center gap-3 rounded-[var(--radius-lg)] transition-all py-3 px-3 cursor-pointer text-[var(--warm-charcoal)] hover:bg-[var(--oat-light)] hover:text-[var(--clay-black)]"
-                >
-                  <NavIcon name="admin_panel_settings" />
-                  <span className="text-sm font-medium">Admin Panel</span>
-                </Link>
-              </div>
-            )}
 
             {/* Bottom items */}
             <div className="space-y-1 pt-2 border-t border-[var(--oat-border)]">
@@ -377,20 +343,6 @@ export function Sidebar() {
                   </Link>
                 );
               })}
-              <button
-                onClick={() => { setCommunityModalOpen(true); setMobileSheetOpen(false); }}
-                className="flex items-center gap-3 rounded-[var(--radius-lg)] transition-all py-3 px-3 cursor-pointer text-[var(--warm-charcoal)] hover:bg-[var(--oat-light)] hover:text-[var(--clay-black)] w-full text-left"
-              >
-                <NavIcon name="forum" />
-                <span className="text-sm font-medium">Komunitas</span>
-              </button>
-              <button
-                onClick={() => { triggerGlobalTour(); setMobileSheetOpen(false); }}
-                className="flex items-center gap-3 rounded-[var(--radius-lg)] transition-all py-3 px-3 cursor-pointer text-[var(--warm-charcoal)] hover:bg-[var(--oat-light)] hover:text-[var(--clay-black)] w-full text-left"
-              >
-                <NavIcon name="help" />
-                <span className="text-sm font-medium">Panduan</span>
-              </button>
             </div>
 
             {/* Auth row */}

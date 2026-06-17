@@ -8,7 +8,7 @@ export const env = createEnv({
     REDIS_URL: z.string().min(1).default("redis://localhost:6379"),
     BETTER_AUTH_SECRET: z.string().min(32),
     BETTER_AUTH_URL: z.url(),
-    CORS_ORIGIN: z.url(),
+    CORS_ORIGIN: z.string().min(1),
     API_KEY_ENCRYPTION_KEY: z.string().min(32),
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
     SMTP_HOST: z.string().min(1),

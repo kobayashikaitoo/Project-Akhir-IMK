@@ -60,6 +60,7 @@ function SetupAvatarComponent() {
   const [beard, setBeard] = useState(false);
   const [earrings, setEarrings] = useState(false);
   const [randomSeeds, setRandomSeeds] = useState(() => generateRandomSeeds(8));
+  const [grade, setGrade] = useState("10_MIPA");
 
   const options: DiceBearLoreleiOptions = useMemo(
     () => ({
@@ -87,9 +88,9 @@ function SetupAvatarComponent() {
   }, []);
 
   const handleSave = useCallback(async () => {
-    await updateMutation.mutateAsync({ image: avatarUrl });
+    await updateMutation.mutateAsync({ image: avatarUrl, grade });
     navigate({ to: redirectTo || "/dashboard" });
-  }, [avatarUrl, updateMutation, navigate, redirectTo]);
+  }, [avatarUrl, grade, updateMutation, navigate, redirectTo]);
 
   const quickPickUrls = useMemo(
     () => randomSeeds.map((s) => buildDiceBearLoreleiUrl({ ...options, seed: s })),
@@ -270,6 +271,32 @@ function SetupAvatarComponent() {
           {/* Right Column - Button (sticky) */}
           <div className="lg:col-span-1">
             <div className="lg:sticky lg:top-8 lg:h-fit">
+              <Card className="bg-[var(--pure-white)] border-2 border-[var(--oat-border)] rounded-[var(--radius-xl)] p-5 mb-4">
+                <p className="text-sm font-headline font-bold text-[var(--clay-black)] mb-3">Pilih Kelas & Jurusan SMA</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { key: "10_MIPA", label: "X MIPA" },
+                    { key: "10_IPS", label: "X IPS" },
+                    { key: "11_MIPA", label: "XI MIPA" },
+                    { key: "11_IPS", label: "XI IPS" },
+                    { key: "12_MIPA", label: "XII MIPA" },
+                    { key: "12_IPS", label: "XII IPS" },
+                  ].map((g) => (
+                    <button
+                      key={g.key}
+                      onClick={() => setGrade(g.key)}
+                      className={cn(
+                        "px-3 py-2 text-xs rounded-lg border-2 transition-all font-headline font-bold",
+                        grade === g.key
+                          ? "bg-[var(--clay-black)] text-[var(--pure-white)] border-[var(--clay-black)] clay-shadow"
+                          : "bg-[var(--pure-white)] text-[var(--warm-charcoal)] border-[var(--oat-border)] hover:border-[var(--warm-charcoal)]"
+                      )}
+                    >
+                      {g.label}
+                    </button>
+                  ))}
+                </div>
+              </Card>
               <Card className="bg-[var(--pure-white)] border-2 border-[var(--oat-border)] rounded-[var(--radius-xl)] p-6">
                 <div className="text-center mb-4">
                   <p className="text-sm font-semibold text-[var(--clay-black)]">Avatar Kamu</p>
