@@ -2,7 +2,7 @@
 
 <p align="center">
   <strong>Pijar — Pembelajaran Interaktif Pelajar (Versi SMA)</strong><br />
-  Aplikasi pembelajaran sekolah interaktif berbasis gamifikasi yang dirancang untuk siswa SMA, memadukan materi teori visual dengan kuis split-screen, asisten Tutor AI, dan rapor kemajuan persiapan ujian.
+  Aplikasi pembelajaran sekolah interaktif berbasis gamifikasi yang dirancang untuk siswa SMA, memadukan materi teori visual dengan kuis split-screen dan rapor kemajuan persiapan ujian.
 </p>
 
 <p align="center">
@@ -38,8 +38,7 @@ graph TD
     E -->|Kirim Jawaban| F[Hasil Latihan & Ulasan Rumus]
     
     C -->|Klik Menu Rapor| G[Rapor Kemajuan & Grafik Nilai]
-    C -->|Klik Menu Tutor AI| H[Halaman Tanya Tutor AI]
-    C -->|Klik Pengaturan| I[Pengaturan Profil & Kunci API]
+    C -->|Klik Pengaturan| I[Pengaturan Profil]
 ```
 
 ### Penjelasan Alur Navigasi:
@@ -67,11 +66,8 @@ graph TD
 
 6. **Rapor Kemajuan Siswa (`/analytics`)**:
    - Visualisasi tingkat kesiapan ujian berupa grafik radar mata pelajaran, status bintang emas latihan, progress bar linear penyelesaian materi, serta kartu rekomendasi AI Tutor untuk mengulang materi yang masih lemah.
-
-7. **Tanya Tutor AI (`/generate`)**:
-   - Halaman obrolan dengan asisten belajar cerdas di mana siswa dapat mengetik pertanyaan rumit atau memilih tombol pintasan cepat (seperti meminta latihan Kalkulus atau penjelasan hukum Fisika).
-
-8. **Pengaturan (`/settings`)**:
+     
+7. **Pengaturan (`/settings`)**:
    - Halaman untuk menyetel profil pribadi, mengganti avatar, serta memasukkan API Key OpenAI-compatible secara aman untuk penggunaan mandiri AI Tutor.
 
 ---
@@ -79,7 +75,6 @@ graph TD
 ## Fitur Utama
 
 - **Antarmuka Split-Screen (Side-by-Side)**: Menyajikan materi rumus di kiri dan kuis latihan di kanan dalam satu layar untuk memangkas pemborosan navigasi scroll (**Efficiency**).
-- **Asisten Tutor AI Cerdas**: Chatbot asisten belajar SMA yang siaga memecahkan dan menerangkan rumus sains dan pemahaman bahasa secara logis dan terstruktur.
 - **Rapor Visual Tergamifikasi**: Statistik kemajuan berupa bintang emas, akumulasi XP, dan grafik radar/batang nilai mapel untuk meningkatkan aspek **Satisfaction**.
 - **Desain Clay Modern**: Sudut membulat tebal, warna kontras swatches, font rounded Quicksand & Nunito (membantu kenyamanan membaca lama - **Learnability**), dan efek hover taktil tebal (mendukung **Error Prevention**).
 - **PWA (Progressive Web App)**: Aplikasi ringan yang dapat dipasang di smartphone Android/iOS atau laptop siswa dengan dukungan luring ringan.
@@ -110,7 +105,6 @@ graph TD
 | Background Job / Antrean | Redis + BullMQ (Untuk antrean pembuatan kuis AI) |
 | Autentikasi | [Better Auth](https://www.better-auth.com) |
 | UI Library (Clay Style) | [shadcn/ui](https://ui.shadcn.com) di `packages/ui` |
-| AI Integration | OpenAI-compatible API (`packages/ai`) |
 
 ---
 
