@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="./apps/web/public/logo.png" alt="Pijar" width="200" />
-</p>
-
 <h1 align="center">Pijar</h1>
 
 <p align="center">
